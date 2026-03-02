@@ -1,8 +1,5 @@
 // 公共常量定义
 const YEAR_KEY = "stock_year";
-const STORAGE_KEY = "stock_summary";
-const STORAGE_PREFIX = "stock_"; // 带年份的存储前缀，如 stock_2026_1
-const YEARS_DATA_KEY = "stock_years_data"; // 多年数据存储key
 const HIDE_AMOUNT_KEY = "stock_hide_amount"; // 隐藏金额状态
 
 // 月份名称

@@ -67,14 +67,6 @@ async function fetchKaiPanLaData() {
         // 填充股票表格
         fillTable('stockTable', stockResult);
 
-        // 保存到本地存储
-        const monthDataKey = STORAGE_PREFIX + currentYear + "_" + currentMonth;
-        const savedData = localStorage.getItem(monthDataKey);
-        let parsed = savedData ? JSON.parse(savedData) : {};
-        parsed.sector = sectorResult;
-        parsed.stock = stockResult;
-        localStorage.setItem(monthDataKey, JSON.stringify(parsed));
-
         alert(`${currentYear}年${currentMonth}月数据获取成功！\n板块数据：${sectorResult.length}条\n股票数据：${stockResult.length}条`);
     } catch (error) {
         console.error('获取数据失败:', error);

@@ -63,6 +63,11 @@ function getSavedUserId() {
     return info.userId;
 }
 
+function getSavedFundKey() {
+    const info = getTHSInfo();
+    return info.fundKey;
+}
+
 /**
  * 请求 API
  */
@@ -200,16 +205,20 @@ async function getClearedPositions(cookie, userId, fundKey, year, month) {
  * 获取每日/月累计盈亏数据
  * @param {string} cookie - Cookie
  * @param {string} userId - 用户ID
+ * @param {string} fundKey - 基金账户key
  * @param {number} year - 年份
  * @param {number} month - 月份
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
  */
-async function getDailyProfit(cookie, userId, year, month) {
+async function getDailyProfit(cookie, userId, fundKey, year, month) {
     if (!cookie) {
         return { success: false, error: 'cookie_missing', message: '请先填写Cookie' };
     }
     if (!userId) {
         return { success: false, error: 'userid_missing', message: '请先填写用户ID' };
+    }
+    if (!fundKey) {
+        return { success: false, error: 'fundkey_missing', message: '请先填写FundKey' };
     }
 
     // 计算月初和月末
@@ -226,8 +235,8 @@ async function getDailyProfit(cookie, userId, year, month) {
         userid: userId,
         terminal: '0',
         version: '0.0.0',
-        fund_key: '54602109',
-        fundkey: '54602109',
+        fund_key: fundKey,
+        fundkey: fundKey,
         rzrq_fund_key: '',
         manual_id: '',
         fund_id: '',
@@ -291,6 +300,7 @@ module.exports = {
     getSavedCookie,
     saveCookie,
     getSavedUserId,
+    getSavedFundKey,
     saveUserId,
     saveTHSInfo,
     getTHSInfo

@@ -5,15 +5,18 @@ function openThsConfigModal() {
     const modal = document.getElementById('thsConfigModal');
     modal.style.display = 'flex';
 
-    // 获取已保存的配置
+    // 获取已保存的配置（从服务器读取）
     fetch(`${API_BASE}/ths/config`)
         .then(res => res.json())
         .then(config => {
             if (config.hasUserId) {
-                document.getElementById('thsUserId').value = localStorage.getItem('ths_user_id') || '';
+                document.getElementById('thsUserId').value = config.userId || '';
+            }
+            if (config.hasFundKey) {
+                document.getElementById('thsFundKey').value = config.fundKey || '';
             }
             if (config.hasCookie) {
-                document.getElementById('thsCookie').value = localStorage.getItem('ths_cookie') || '';
+                document.getElementById('thsCookie').value = config.cookie || '';
             }
         })
         .catch(err => {
@@ -30,10 +33,15 @@ function closeThsConfigModal() {
 // 保存同花顺配置
 function saveThsConfig() {
     const userId = document.getElementById('thsUserId').value.trim();
+    const fundKey = document.getElementById('thsFundKey').value.trim();
     const cookie = document.getElementById('thsCookie').value.trim();
 
     if (!userId) {
         alert('请输入用户ID');
+        return;
+    }
+    if (!fundKey) {
+        alert('请输入FundKey');
         return;
     }
     if (!cookie) {
@@ -41,13 +49,10 @@ function saveThsConfig() {
         return;
     }
 
-    // 保存到本地
-    localStorage.setItem('ths_user_id', userId);
-    localStorage.setItem('ths_cookie', cookie);
-
     // 保存到服务器
     const formData = new URLSearchParams();
     formData.append('userId', userId);
+    formData.append('fundKey', fundKey);
     formData.append('cookie', cookie);
 
     fetch(`${API_BASE}/ths/saveCookie`, {
@@ -70,23 +75,23 @@ function saveThsConfig() {
 
 // 从同花顺导入数据
 function importThsData() {
-    // 检查是否已配置
-    const userId = localStorage.getItem('ths_user_id');
-    const cookie = localStorage.getItem('ths_cookie');
-
-    if (!userId || !cookie) {
-        alert('请先配置同花顺Cookie和用户ID');
-        openThsConfigModal();
-        return;
-    }
-
-    // 发送请求获取数据
-    fetch(`${API_BASE}/ths/clearedPositions?year=${currentYear}&month=${currentMonth}`)
+    // 检查是否已配置（从服务器获取）
+    fetch(`${API_BASE}/ths/config`)
         .then(res => res.json())
+        .then(config => {
+            if (!config.hasUserId || !config.hasFundKey || !config.hasCookie) {
+                alert('请先配置同花顺Cookie、用户ID和FundKey');
+                openThsConfigModal();
+                return;
+            }
+            // 发送请求获取数据
+            return fetch(`${API_BASE}/ths/clearedPositions?year=${currentYear}&month=${currentMonth}`);
+        })
+        .then(res => res ? res.json() : null)
         .then(data => {
+            if (!data) return;
             if (data.success) {
                 if (data.data && data.data.length > 0) {
-                    // 将数据填入自我收益表格
                     fillSelfProfitTableFromThs(data.data);
                     alert(`成功导入 ${data.data.length} 条数据！`);
                 } else {
@@ -106,11 +111,12 @@ function importThsData() {
 
 // 刷新每日/月累计数据
 async function refreshDailyProfit() {
-    const userId = localStorage.getItem('ths_user_id');
-    const cookie = localStorage.getItem('ths_cookie');
+    // 检查是否已配置（从服务器获取）
+    const configRes = await fetch(`${API_BASE}/ths/config`);
+    const config = await configRes.json();
 
-    if (!userId || !cookie) {
-        alert('请先配置同花顺Cookie和用户ID');
+    if (!config.hasUserId || !config.hasFundKey || !config.hasCookie) {
+        alert('请先配置同花顺Cookie、用户ID和FundKey');
         openThsConfigModal();
         return;
     }
