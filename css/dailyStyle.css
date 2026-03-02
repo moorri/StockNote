@@ -1,0 +1,266 @@
+body {
+    background: #f5f5f5;
+    min-height: 100vh;
+}
+.daily-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+.daily-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 15px 20px;
+    /*background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);*/
+}
+.daily-header h1 {
+    margin: 0;
+    font-size: 20px;
+}
+.date-nav {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.date-nav button {
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.date-nav button:hover {
+    background: #f0f0f0;
+}
+.date-nav span {
+    font-size: 18px;
+    font-weight: bold;
+    min-width: 150px;
+    text-align: center;
+}
+.daily-section {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.daily-section h2 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: #333;
+    border-left: 3px solid #4a90d9;
+    padding-left: 10px;
+}
+.market-info {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+.market-info-item {
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+.market-info-item label {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 5px;
+}
+.market-info-item input,
+.market-info-item select {
+    width: 90%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+.sector-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.sector-tag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #e8f4ff;
+    border-radius: 20px;
+    font-size: 13px;
+}
+.sector-tag .strength {
+    color: #4a90d9;
+    font-weight: bold;
+}
+.sector-tag .rise {
+    color: #52c41a;
+}
+.sector-tag input {
+    border: none;
+    background: transparent;
+}
+.sector-tag input::placeholder {
+    color: #999;
+}
+.sector-tag .btn-del {
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #999;
+    font-size: 16px;
+}
+.daily-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.daily-table th,
+.daily-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+.daily-table th {
+    background: #f8f9fa;
+    font-weight: 500;
+    font-size: 13px;
+    color: #666;
+}
+.daily-table td input,
+.daily-table td select {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+.btn-add-row {
+    margin-top: 10px;
+    padding: 6px 12px;
+    border: 1px dashed #4a90d9;
+    background: #fff;
+    color: #4a90d9;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.btn-add-row:hover {
+    background: #e8f4ff;
+}
+.btn-del-row {
+    padding: 4px 8px;
+    border: none;
+    background: #ff4d4f;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.btn-save-daily {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 12px 30px;
+    background: #4a90d9;
+    color: #fff;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(74,144,217,0.4);
+}
+.btn-save-daily:hover {
+    background: #357abd;
+}
+.operation-type {
+    display: flex;
+    gap: 5px;
+}
+.operation-type button {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.operation-type button.active {
+    background: #4a90d9;
+    color: #fff;
+    border-color: #4a90d9;
+}
+.textarea-auto {
+    width: 95%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+    min-height: 60px;
+    font-family: inherit;
+}
+.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+/* 图标按钮样式 */
+.icon-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.icon-btn img {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
+/* 头部返回按钮 */
+.daily-header .icon-btn#backBtn {
+    position: absolute;
+    left: 20px;
+}
+
+/* 日期导航按钮 */
+.date-nav .icon-btn img {
+    width: 20px;
+    height: 20px;
+}
+
+/* 退出按钮 - 固定在右上角 */
+.daily-header .exit-btn {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+}
+
+.daily-header .hide-amount-btn {
+    position: absolute;
+    right: 20px;
+    top: 55px;
+}
+
+/* 盈亏颜色 */
+.red {
+    color: #f5222d;
+}
+
+.green {
+    color: #52c41a;
+}

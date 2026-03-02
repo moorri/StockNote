@@ -1,0 +1,9 @@
+# 数据
+data/
+
+# 年度照片文件夹 (photo/2021, photo/2022 等)
+photo/20*/
+
+# Claude
+.claude/
+claude.md

@@ -1,0 +1,404 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Microsoft YaHei", sans-serif;
+}
+body {
+    background-color: #f5f7fa;
+    padding: 20px;
+}
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+}
+.header h1 {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+.header p {
+    color: #666;
+    font-size: 16px;
+}
+
+/* 月度卡片区域 */
+.month-cards {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 15px;
+    margin-bottom: 30px;
+}
+.month-card {
+    background: #4096ff;
+    color: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.month-card.profit {
+    background: #f5565e;
+}
+.month-card.big-profit {
+    background: #f5222d;
+}
+.month-card h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+.month-card .my-profit {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.month-card .index-profit {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* 年度汇总区域 */
+.year-summary {
+    background: #fff;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+.summary-item {
+    text-align: center;
+}
+.summary-item h3 {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 10px;
+}
+.summary-item .value {
+    font-size: 28px;
+    font-weight: bold;
+}
+.summary-item .value.red {
+    color: #f5222d;
+}
+.summary-item .value.green {
+    color: #52c41a;
+}
+
+/* 录入区域 */
+.input-area {
+    background: #fff;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+}
+.input-area h2 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+.month-input {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+.month-item {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+.month-item h4 {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 10px;
+}
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.input-group label {
+    font-size: 14px;
+    color: #666;
+    width: 80px;
+    align-self: center;
+}
+.input-group input {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+.btn-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+.btn-save {
+    background-color: #1677ff;
+    color: #fff;
+}
+.btn-save:hover {
+    background-color: #0d66d0;
+}
+.btn-reset {
+    background-color: #f5f5f5;
+    color: #333;
+}
+.btn-reset:hover {
+    background-color: #e8e8e8;
+}
+
+/* 弹窗相关样式 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: grid;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.year-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.year-input-group label {
+    font-weight: bold;
+}
+
+.year-input-group input {
+    width: 80px;
+    padding: 5px;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* 右上角操作按钮组样式 */
+.header-operations {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px; /* 按钮之间间距 */
+    z-index: 100;
+}
+
+.op-btn {
+    padding: 8px 16px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.op-btn:hover {
+    background: #0056b3;
+}
+
+.op-btn.import-btn {
+    background: #28a745;
+}
+
+.op-btn.import-btn:hover {
+    background: #218838;
+}
+
+.op-btn.export-btn {
+    background: #ffc107;
+    color: #333;
+}
+
+.op-btn.export-btn:hover {
+    background: #e0a800;
+}
+
+/* 隐藏文件选择框 */
+#fileImport {
+    display: none;
+}
+
+/* 图表容器样式 */
+.chart-container {
+    background: #fff;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+}
+.chart-container h2 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 15px;
+    text-align: center;
+}
+.chart-container {
+    position: relative;
+}
+.chart-type-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 6px 12px;
+    font-size: 12px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #666;
+}
+.chart-type-toggle:hover {
+    background: #e0e0e0;
+}
+#profitChart {
+    min-height: 400px;
+}
+
+/* 年份选择器样式 */
+.year-select-wrapper {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.year-select-wrapper label {
+    font-size: 14px;
+    color: #666;
+}
+
+.year-select-wrapper select {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* 删除年份按钮样式 */
+.delete-year-btn {
+    background-color: #ff4d4f;
+}
+
+.delete-year-btn:hover {
+    background-color: #ff7875;
+}
+
+/* 年度对比复选框样式 */
+.year-checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.year-checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.year-checkbox-group label:hover {
+    background: #f5f5f5;
+}
+
+.year-checkbox-group input[type="checkbox"] {
+    cursor: pointer;
+}
+
+/* 图标按钮样式 */
+.icon-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.icon-btn img {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
+/* 退出按钮 - 固定在右上角 */
+.header {
+    position: relative;
+}
+
+.header .exit-btn {
+    position: fixed;
+    right: 20px;
+    top: 20px;
+}
+
+.header .hide-amount-btn {
+    position: fixed;
+    right: 20px;
+    top: 60px;
+}

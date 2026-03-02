@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票复盘年总结</title>
+    <link rel="stylesheet" href="../css/indexStyle.css">
+    <!-- 引入 ECharts -->
+    <script src="../js/lib/echarts.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部标题 -->
+        <div class="header">
+            <button class="icon-btn hide-amount-btn" id="hideAmountBtn" onclick="toggleAmountDisplay()" title="显示/隐藏金额"><img src="../photo/ico/close.png" alt="隐藏金额"></button>
+            <button class="icon-btn exit-btn" onclick="shutdownServer()" title="退出"><img src="../photo/ico/Exit.png" alt="退出"></button>
+            <h1><select id="yearSelect" onchange="switchYear(this.value)" style="font-size:inherit;font-weight:bold;padding:0 10px;height:36px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;"></select>年股票操作总结 <button class="op-btn" onclick="addNewYear()" style="font-size:14px;padding:4px 10px;margin-left:10px;">新增</button><button class="op-btn delete-year-btn" onclick="deleteCurrentYear()" style="font-size:14px;padding:4px 10px;">删除</button></h1>
+            <p>月度收益对比 | 全年表现汇总</p>
+        </div>
+
+        <!-- 月度卡片展示 -->
+        <div class="month-cards" id="monthCards">
+            <!-- 卡片通过JS自动生成 -->
+        </div>
+
+        <!-- 年度汇总 -->
+        <div class="year-summary">
+            <div class="summary-item">
+                <h3>当年收益率</h3>
+                <div class="value red" id="myYearProfit">+20%</div>
+            </div>
+            <div class="summary-item">
+               年度收益金额 <h3></h3>
+                <div class="value red amount-value" id="myYearAmount">--</div>
+            </div>
+            <div class="summary-item">
+                <h3>上证指数全年涨幅</h3>
+                <div class="value green" id="indexYearProfit">+5%</div>
+            </div>
+        </div>
+
+        <!-- 收益走势图 -->
+        <div class="chart-container">
+            <h2>月度收益对比</h2>
+            <button class="chart-type-toggle" id="profitChartToggle" onclick="toggleChartType('profit')">切换柱状图</button>
+            <div id="profitChart" style="width: 100%; height: 400px;"></div>
+        </div>
+
+        <!-- 年度对比图表 -->
+        <div class="chart-container" id="comparisonChartContainer" style="display: none;">
+            <h2>年度收益对比</h2>
+            <button class="chart-type-toggle" id="comparisonChartToggle" onclick="toggleChartType('comparison')">切换柱状图</button>
+            <div class="year-checkbox-group" id="yearCheckboxGroup">
+                <!-- 复选框通过JS生成 -->
+            </div>
+            <div id="comparisonChartLine" style="width: 100%; height: 400px;"></div>
+            <div id="comparisonChartBar" style="width: 100%; height: 400px; display: none;"></div>
+        </div>
+
+    </div>
+
+    <script src="../js/constants.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/kaiPanLa.js"></script>
+    <script src="../js/yearSelect.js"></script>
+    <script src="../js/chartModal.js"></script>
+    <script src="../js/indexChart.js"></script>
+    <script src="../js/indexFuns.js"></script>
+</body>
+</html>

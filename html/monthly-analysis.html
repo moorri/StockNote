@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票月度分析</title>
+    <link rel="stylesheet" href="../css/monthlyStyle.css">
+</head>
+<body>
+    <!-- 加载遮罩层 -->
+    <div id="loadingOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;color:#fff;font-size:20px;">
+        <div>加载中...</div>
+    </div>
+    <div class="container">
+        <!-- 头部标题 -->
+        <div class="header">
+            <button class="icon-btn back-btn" onclick="window.location.href='index.html'" title="首页"><img src="../photo/ico/Time.png" alt="首页"></button>
+            <h1><select id="yearSelect" onchange="switchYearFromSelect()"></select>年 <span id="currentMonth">X</span>月股票月度分析</h1>
+            <button class="icon-btn hide-amount-btn" id="hideAmountBtn" onclick="toggleAmountDisplay()" title="显示/隐藏金额"><img src="../photo/ico/close.png" alt="隐藏金额"></button>
+            <button class="icon-btn exit-btn" onclick="exitWithSave()" title="退出"><img src="../photo/ico/Exit.png" alt="退出"></button>
+            <div class="month-select">
+                <button class="month-btn" onclick="switchMonth(1)">1月</button>
+                <button class="month-btn" onclick="switchMonth(2)">2月</button>
+                <button class="month-btn" onclick="switchMonth(3)">3月</button>
+                <button class="month-btn" onclick="switchMonth(4)">4月</button>
+                <button class="month-btn" onclick="switchMonth(5)">5月</button>
+                <button class="month-btn" onclick="switchMonth(6)">6月</button>
+                <button class="month-btn" onclick="switchMonth(7)">7月</button>
+                <button class="month-btn" onclick="switchMonth(8)">8月</button>
+                <button class="month-btn" onclick="switchMonth(9)">9月</button>
+                <button class="month-btn" onclick="switchMonth(10)">10月</button>
+                <button class="month-btn" onclick="switchMonth(11)">11月</button>
+                <button class="month-btn" onclick="switchMonth(12)">12月</button>
+        </div>
+
+        <!-- 月度收益和上证涨幅显示 -->
+        <div class="monthly-profit-info">
+            <div class="profit-item">
+                <span class="label">本月收益：</span>
+                <span class="value" id="monthlyMyProfit">--</span>
+            </div>
+            <div class="profit-item">
+                <span class="label">收益金额：</span>
+                <span class="value amount-value" id="monthlyMyAmount">--</span>
+            </div>
+            <div class="profit-item">
+                <span class="label">上证涨幅：</span>
+                <span class="value" id="monthlyIndexProfit">--</span>
+            </div>
+        </div>
+
+        <!-- 左右布局 -->
+        <div class="main-layout">
+            <!-- 左侧：日历 -->
+            <div class="left-sidebar">
+                <div class="calendar-section">
+                    <div class="calendar-header">
+                        <button class="icon-btn" onclick="refreshDailyProfit()" title="刷新数据"><img src="../photo/ico/Data.png" alt="刷新"></button>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- 日历由JS生成 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：月度分析和总结 -->
+            <div class="right-content">
+            <!-- 开头文字录入 -->
+            <div class="monthly-item text-area">
+                <h2>月度分析</h2>
+                <textarea id="introText" placeholder="例如：本月市场整体呈现震荡走势，AI相关板块分化明显，机器人概念领涨但资金净流出，而算力板块虽调整但获资金加仓..."></textarea>
+            </div>
+            <!-- 结尾总结录入 -->
+            <div class="monthly-item text-area">
+                <h2>月度总结</h2>
+                <textarea id="summaryText" placeholder="例如：本月操作中，机器人概念虽涨幅居前但资金出逃，需警惕后续回调；自身持仓中麦格米特盈利较好但仓位不足，后续需优化仓位管理..."></textarea>
+            </div>
+            </div>
+        </div>
+
+        <!-- 双表格区域（放在日历/月度分析整块下方） -->
+        <div class="tables-area">
+            <!-- 表格1：板块/股票切换 -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h2 id="table1Title">板块数据汇总</h2>
+                    <div>
+                        <span class="table-switch active" onclick="switchTable1('板块')">板块</span>
+                        <span class="table-switch" onclick="switchTable1('股票')">股票</span>
+                        <button class="icon-btn" onclick="fetchKaiPanLaData()" title="获取数据"><img src="../photo/ico/Get.png" alt="获取数据"></button>
+                        <button class="icon-btn" onclick="addRow(document.getElementById('sectorTable').style.display !== 'none' ? 'sectorTable' : 'stockTable')" title="添加行"><img src="../photo/ico/add.png" alt="添加"></button>
+                        <button class="icon-btn" onclick="delRow(document.getElementById('sectorTable').style.display !== 'none' ? 'sectorTable' : 'stockTable')" title="删除行"><img src="../photo/ico/sub.png" alt="删除"></button>
+                    </div>
+                </div>
+                <!-- 板块表格（默认） -->
+                <table id="sectorTable">
+                    <thead>
+                        <tr>
+                            <th>板块名称</th>
+                            <th class="sortable" data-sort="sectorStrength" onclick="sortTable('sectorTable', 'strength')">区间强度 <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="sectorRise" onclick="sortTable('sectorTable', 'rise')">区间涨幅 <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="sectorMoney" onclick="sortTable('sectorTable', 'money')">区间净额 <span class="sort-icon"></span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="input-cell"><input type="text" placeholder="机器人概念"></td>
+                            <td class="input-cell"><input type="text" placeholder="109126"></td>
+                            <td class="input-cell"><input type="text" placeholder="2.99%"></td>
+                            <td class="input-cell"><input type="text" placeholder="-69.66亿"></td>
+                        </tr>
+                        </tr>
+                    </tbody>
+                </table>
+                <!-- 股票表格（切换显示） -->
+                <table id="stockTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>股票名称</th>
+                            <th>板块</th>
+                            <th class="sortable" data-sort="stockRise" onclick="sortTable('stockTable', 'rise')">区间涨幅 <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="stockMoney" onclick="sortTable('stockTable', 'money')">区间净额 <span class="sort-icon"></span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="input-cell"><input type="text" placeholder="冀东装备"></td>
+                            <td class="input-cell"><input type="text" placeholder="雄安新区"></td>
+                            <td class="input-cell"><input type="text" placeholder="84.49%"></td>
+                            <td class="input-cell"><input type="text" placeholder="-3909万"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 表格2：自我收益 -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h2>自我收益汇总</h2>
+                    <div>
+                        <button class="icon-btn" onclick="openThsConfigModal()" title="配置Cookie"><img src="../photo/ico/Modify.png" alt="配置"></button>
+                        <button class="icon-btn" onclick="importThsData()" title="获取收益"><img src="../photo/ico/Get.png" alt="获取收益"></button>
+                        <button class="icon-btn" onclick="addSelfProfitRow()" title="添加行"><img src="../photo/ico/add.png" alt="添加"></button>
+                        <button class="icon-btn" onclick="delSelfProfitRow()" title="删除行"><img src="../photo/ico/sub.png" alt="删除"></button>
+                    </div>
+                </div>
+                <table id="selfProfitTable">
+                    <thead>
+                        <tr>
+                            <th>名称</th>
+                            <th class="sortable" data-sort="totalProfit" onclick="sortSelfProfitTable('totalProfit')">总盈亏 <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="profitRate" onclick="sortSelfProfitTable('profitRate')">盈亏比 <span class="sort-icon"></span></th>
+                            <th>持有周期</th>
+                            <th>手续费</th>
+                            <th>备注</th>
+                            <th>分时图</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="input-cell"><input type="text" placeholder="新增股票" onchange="updateChart(this)"></td>
+                            <td class="input-cell"><input type="text" placeholder="0.00"></td>
+                            <td class="input-cell"><input type="text" placeholder="0.00%"></td>
+                            <td class="input-cell"><input type="text" placeholder="例如：3天"></td>
+                            <td class="input-cell"><input type="text" placeholder="备注信息"></td>
+                            <td class="chart-cell"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分时图放大弹窗（默认隐藏） -->
+    <div class="chart-modal-overlay" id="chartModal">
+        <div class="chart-modal-content">
+            <!-- 关闭按钮 -->
+            <button class="chart-modal-close" id="closeChartModal" onclick="closeChartModal()">&times;</button>
+            <!-- 放大后的图片容器 -->
+            <img src="" alt="分时图放大展示" class="chart-modal-img" id="modalChartImg">
+        </div>
+    </div>
+
+    <!-- 同花顺配置弹窗（默认隐藏） -->
+    <div class="modal-overlay" id="thsConfigModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>同花顺配置</h2>
+                <button class="close-modal" onclick="closeThsConfigModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>用户ID (userid):</label>
+                    <input type="text" id="thsUserId" placeholder="请输入用户ID">
+                </div>
+                <div class="form-group">
+                    <label>Cookie:</label>
+                    <textarea id="thsCookie" placeholder="请输入Cookie" rows="5"></textarea>
+                </div>
+                <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                    提示：Cookie 过期后，请重新填写 Cookie 和 userid。
+                </p>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-save" onclick="saveThsConfig()">保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/constants.js"></script>
+    <script>
+        // 数据存储API - 直接定义在HTML中
+        // const API_BASE = 'http://localhost:3001';
+
+        async function getDailyData(year, month) {
+            try {
+                const response = await fetch(`${API_BASE}/daily/get?year=${year}&month=${month}`);
+                return await response.json();
+            } catch (error) {
+                console.error('获取每日数据失败:', error);
+                return {};
+            }
+        }
+
+        async function saveDailyData(year, month, data) {
+            try {
+                const formData = new URLSearchParams({year, month, data: JSON.stringify(data)});
+                const response = await fetch(`${API_BASE}/daily/save`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: formData
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('保存每日数据失败:', error);
+                return {success: false, error: error.message};
+            }
+        }
+
+        async function getMonthlyData(year) {
+            try {
+                const response = await fetch(`${API_BASE}/monthly/get?year=${year}`);
+                return await response.json();
+            } catch (error) {
+                console.error('获取月度数据失败:', error);
+                return {};
+            }
+        }
+
+        async function saveMonthlyData(year, data) {
+            try {
+                const formData = new URLSearchParams({year, data: JSON.stringify(data)});
+                const response = await fetch(`${API_BASE}/monthly/save`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: formData
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('保存月度数据失败:', error);
+                return {success: false, error: error.message};
+            }
+        }
+
+        // 获取休市日列表
+        async function getOffDays(year) {
+            try {
+                const response = await fetch(`${API_BASE}/holidays/offDays?year=${year}`);
+                return await response.json();
+            } catch (error) {
+                console.error('获取休市日失败:', error);
+                return [];
+            }
+        }
+
+        window.getOffDays = getOffDays;
+
+        async function getYearsData() {
+            try {
+                const response = await fetch(`${API_BASE}/yearsData/get`);
+                return await response.json();
+            } catch (error) {
+                console.error('获取年度汇总数据失败:', error);
+                return {};
+            }
+        }
+
+        async function saveYearsData(data) {
+            try {
+                const formData = new URLSearchParams({data: JSON.stringify(data)});
+                const response = await fetch(`${API_BASE}/yearsData/save`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: formData
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('保存年度汇总数据失败:', error);
+                return {success: false, error: error.message};
+            }
+        }
+
+        // 暴露到全局
+        window.getDailyData = getDailyData;
+        window.saveDailyData = saveDailyData;
+        window.getMonthlyData = getMonthlyData;
+        window.saveMonthlyData = saveMonthlyData;
+        window.getYearsData = getYearsData;
+        window.saveYearsData = saveYearsData;
+    </script>
+    <script src="../js/api.js"></script>
+    <script src="../js/kaiPanLa.js"></script>
+    <script src="../js/monthlyFuns.js"></script>
+    <script src="../js/chartModal.js"></script>
+    <script src="../js/tableSort.js"></script>
+    <script src="../js/colorUtils.js"></script>
+    <script src="../js/inputListeners.js"></script>
+    <script src="../js/yearSelect.js"></script>
+    <script src="../js/tongHuaShunNoteFuns.js"></script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日复盘</title>
+    <link rel="stylesheet" href="../css/dailyStyle.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+    <div id="app" class="daily-container">
+        <!-- 头部导航 -->
+        <div class="daily-header">
+            <button class="icon-btn" id="backBtn" onclick="goBack()" title="返回"><img src="../photo/ico/Left.png" alt="返回"></button>
+            <button class="icon-btn" onclick="goToIndex()" title="首页"><img src="../photo/ico/Time.png" alt="首页"></button>
+            <h1>每日复盘</h1>
+            <div class="date-nav">
+                <button class="icon-btn" @click="changeDate(-1)" title="前日"><img src="../photo/ico/Left.png" alt="前日"></button>
+                <span>{{ dateDisplay }}</span>
+                <button class="icon-btn" @click="changeDate(1)" title="次日"><img src="../photo/ico/Right.png" alt="次日"></button>
+            </div>
+            <button class="icon-btn hide-amount-btn" id="hideAmountBtn" onclick="toggleAmountDisplay()" title="显示/隐藏金额"><img src="../photo/ico/close.png" alt="隐藏金额"></button>
+            <button class="icon-btn exit-btn" onclick="exitWithSave()" title="退出"><img src="../photo/ico/Exit.png" alt="退出"></button>
+        </div>
+
+        <!-- 目标股票 -->
+        <div class="daily-section">
+            <h2>目标股票</h2>
+            <table class="daily-table">
+                <thead>
+                    <tr>
+                        <th style="width: 15%">股票名称</th>
+                        <th style="width: 15%">所属板块</th>
+                        <th style="width: 15%">形态</th>
+                        <th style="width: 15%">量价特征</th>
+                        <th style="width: 30%">备注</th>
+                        <th style="width: 10%">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(w, i) in form.watchStocks" :key="i">
+                        <td><input type="text" v-model="w.股票名称" placeholder="股票名称"></td>
+                        <td><input type="text" v-model="w.板块" placeholder="如: 算力"></td>
+                        <td>
+                            <select v-model="w.形态">
+                                <option value="">选择形态</option>
+                                <option value="突破">突破</option>
+                                <option value="回调">回调</option>
+                                <option value="横盘">横盘</option>
+                                <option value="反包">反包</option>
+                                <option value="首板">首板</option>
+                                <option value="趋势">趋势</option>
+                            </select>
+                        </td>
+                        <td><input type="text" v-model="w.量价特征" placeholder="如: 放量突破"></td>
+                        <td><input type="text" v-model="w.备注" placeholder="备注"></td>
+                        <td><button class="btn-del-row" @click="form.watchStocks.splice(i, 1)">删除</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="btn-add-row" @click="form.watchStocks.push({股票名称:'',板块:'',形态:'',量价特征:'',备注:''})">+ 添加</button>
+        </div>
+
+        <!-- 本日收益（从API获取，只读显示） -->
+        <div class="daily-section">
+            <h2>本日收益</h2>
+            <div class="market-info">
+                <div class="market-info-item">
+                    <label>本日收益</label>
+                    <span class="readonly-value amount-value" :class="form.dailyAmount && parseFloat(form.dailyAmount.replace('%','')) > 0 ? 'red' : (form.dailyAmount && parseFloat(form.dailyAmount.replace('%','')) < 0 ? 'green' : '')">{{ form.dailyAmount || '--' }}</span>
+                </div>
+                <div class="market-info-item">
+                    <label>本日收益率</label>
+                    <span class="readonly-value" :class="form.dailyProfit && parseFloat(form.dailyProfit.replace('%','')) > 0 ? 'red' : (form.dailyProfit && parseFloat(form.dailyProfit.replace('%','')) < 0 ? 'green' : '')">{{ form.dailyProfit || '--' }}</span>
+                </div>
+                <div class="market-info-item">
+                    <label>上证涨幅</label>
+                    <span class="readonly-value" :class="form.dailyIndex && parseFloat(form.dailyIndex.replace('%','')) > 0 ? 'red' : (form.dailyIndex && parseFloat(form.dailyIndex.replace('%','')) < 0 ? 'green' : '')">{{ form.dailyIndex || '--' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 今日行情概述 -->
+        <div class="daily-section">
+            <h2>今日行情概述</h2>
+            <div class="market-info">
+                <div class="market-info-item">
+                    <label>上证指数</label>
+                    <input type="text" v-model="form.shIndex" placeholder="如: +0.5%">
+                </div>
+                <div class="market-info-item">
+                    <label>涨跌停</label>
+                    <input type="text" v-model="form.ztDt" placeholder="如: 80/5">
+                </div>
+                <div class="market-info-item">
+                    <label>最高板</label>
+                    <input type="text" v-model="form.maxBoard" placeholder="如: 7板">
+                </div>
+                <div class="market-info-item">
+                    <label>情绪周期</label>
+                    <select v-model="form.emotionCycle">
+                        <option value="">请选择</option>
+                        <option value="上升期">上升期</option>
+                        <option value="分歧">分歧</option>
+                        <option value="退潮">退潮</option>
+                        <option value="冰点">冰点</option>
+                        <option value="反弹">反弹</option>
+                    </select>
+                </div>
+                <div class="market-info-item">
+                    <label>成交量</label>
+                    <input type="text" v-model="form.volume" placeholder="如: 1.2万亿">
+                </div>
+                <div class="market-info-item" style="grid-column: span 2;">
+                    <label>大节点/关键事件</label>
+                    <input type="text" v-model="form.keyEvent" placeholder="如: 比亚迪发布会、DeepSeek发布新模型">
+                </div>
+            </div>
+        </div>
+
+        <!-- 今日主线/题材 -->
+        <div class="daily-section">
+            <h2>今日主线/题材</h2>
+            <div class="sector-tags">
+                <div class="sector-tag" v-for="(s, i) in form.sectors" :key="i">
+                    <input type="text" v-model="s.板块" placeholder="板块名" style="width: 80px;">
+                    <span class="strength">强度: <input type="text" v-model="s.强度" placeholder="120000" style="width: 60px;"></span>
+                    <span class="rise">涨幅: <input type="text" v-model="s.涨幅" placeholder="+5%" style="width: 50px;"></span>
+                    <button class="btn-del" @click="form.sectors.splice(i, 1)">×</button>
+                </div>
+                <button class="btn-add-row" @click="form.sectors.push({板块:'',强度:'',涨幅:''})">+ 添加主线</button>
+            </div>
+        </div>
+
+        <!-- 今日连板/高标 -->
+        <div class="daily-section">
+            <h2>今日连板/高标</h2>
+            <table class="daily-table">
+                <thead>
+                    <tr>
+                        <th style="width: 15%">股票名称</th>
+                        <th style="width: 15%">所属板块</th>
+                        <th style="width: 10%">板数</th>
+                        <th style="width: 10%">类型</th>
+                        <th style="width: 40%">备注</th>
+                        <th style="width: 10%">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(h, i) in form.highBoards" :key="i">
+                        <td><input type="text" v-model="h.股票名称" placeholder="如: 杭钢股份"></td>
+                        <td><input type="text" v-model="h.板块" placeholder="如: DeepSeek"></td>
+                        <td><input type="text" v-model="h.板数" placeholder="如: 7板"></td>
+                        <td>
+                            <select v-model="h.类型">
+                                <option value="核心">核心</option>
+                                <option value="补涨">补涨</option>
+                                <option value="卡位">卡位</option>
+                                <option value="换手">换手</option>
+                            </select>
+                        </td>
+                        <td><input type="text" v-model="h.备注" placeholder="备注"></td>
+                        <td><button class="btn-del-row" @click="form.highBoards.splice(i, 1)">删除</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="btn-add-row" @click="form.highBoards.push({股票名称:'',板块:'',板数:'',类型:'核心',备注:''})">+ 添加</button>
+        </div>
+
+        <!-- 今日操作记录 -->
+        <div class="daily-section">
+            <h2>今日操作记录</h2>
+            <table class="daily-table">
+                <thead>
+                    <tr>
+                        <th style="width: 12%">标的</th>
+                        <th style="width: 10%">买卖</th>
+                        <th style="width: 8%">仓位</th>
+                        <th style="width: 18%">买入理由</th>
+                        <th style="width: 18%">卖点记录</th>
+                        <th style="width: 14%">结果</th>
+                        <th style="width: 10%">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(o, i) in form.operations" :key="i">
+                        <td><input type="text" v-model="o.标的" placeholder="股票名称"></td>
+                        <td>
+                            <div class="operation-type">
+                                <button :class="{active: o.买卖==='买'}" @click="o.买卖='买'">买</button>
+                                <button :class="{active: o.买卖==='卖'}" @click="o.买卖='卖'">卖</button>
+                            </div>
+                        </td>
+                        <td><input type="text" v-model="o.仓位" placeholder="如: 10%"></td>
+                        <td><input type="text" v-model="o.买入理由" placeholder="为什么买"></td>
+                        <td><input type="text" v-model="o.卖点记录" placeholder="卖点/卖飞/止损"></td>
+                        <td><input type="text" v-model="o.结果" placeholder="待结算/盈利/亏损"></td>
+                        <td><button class="btn-del-row" @click="form.operations.splice(i, 1)">删除</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="btn-add-row" @click="form.operations.push({标的:'',买卖:'买',仓位:'',买入理由:'',卖点记录:'',结果:''})">+ 添加</button>
+        </div>
+
+        <!-- 明日计划 -->
+        <div class="daily-section">
+            <h2>明日计划</h2>
+            <div class="two-col">
+                <div>
+                    <label style="display:block;margin-bottom:8px;font-size:13px;color:#666;">关注方向</label>
+                    <textarea class="textarea-auto" v-model="form.关注方向" placeholder="如: 继续关注算力/机器人主线"></textarea>
+                </div>
+                <div>
+                    <label style="display:block;margin-bottom:8px;font-size:13px;color:#666;">重点标的</label>
+                    <textarea class="textarea-auto" v-model="form.重点标的" placeholder="如: 中际旭创、工业富联、胜宏科技"></textarea>
+                </div>
+                <div>
+                    <label style="display:block;margin-bottom:8px;font-size:13px;color:#666;">风险提示</label>
+                    <textarea class="textarea-auto" v-model="form.风险提示" placeholder="如: 回避高位放量股、谨防题材退潮"></textarea>
+                </div>
+                <div>
+                    <label style="display:block;margin-bottom:8px;font-size:13px;color:#666;">交易计划</label>
+                    <textarea class="textarea-auto" v-model="form.交易计划" placeholder="如: 龙头分歧时关注补涨、回调到均线买入"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- 随笔/感悟 -->
+        <div class="daily-section">
+            <h2>随笔/感悟</h2>
+            <textarea class="textarea-auto" v-model="form.随笔" style="min-height: 100px;" placeholder="今日交易感悟、错误总结、新的理解..."></textarea>
+        </div>
+    </div>
+
+    <script>
+        // 数据存储API
+        // const API_BASE = 'http://localhost:3001';
+        async function getDailyData(year, month) {
+            try {
+                const response = await fetch(`${API_BASE}/daily/get?year=${year}&month=${month}`);
+                return await response.json();
+            } catch (error) { return {}; }
+        }
+        async function saveDailyData(year, month, data) {
+            try {
+                const formData = new URLSearchParams({year, month, data: JSON.stringify(data)});
+                const response = await fetch(`${API_BASE}/daily/save`, {method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: formData});
+                return await response.json();
+            } catch (error) { return {success: false}; }
+        }
+        window.getDailyData = getDailyData;
+        window.saveDailyData = saveDailyData;
+    </script>
+    <script src="../js/constants.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/kaiPanLa.js"></script>
+    <script src="../js/dailyFuns.js"></script>
+    <script>
+        async function goBack() {
+            // 先保存数据
+            await window.appExpose.saveData();
+            // 然后跳转
+            const params = new URLSearchParams(window.location.search);
+            const dateStr = params.get('date');
+            if (dateStr) {
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    const year = parts[0];
+                    const month = parts[1];
+                    location.href = 'monthly-analysis.html?year=' + year + '&month=' + month;
+                    return;
+                }
+            }
+            location.href = 'monthly-analysis.html';
+        }
+    </script>
+</body>
+</html>
