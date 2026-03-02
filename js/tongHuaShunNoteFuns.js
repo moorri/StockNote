@@ -5,15 +5,18 @@ function openThsConfigModal() {
     const modal = document.getElementById('thsConfigModal');
     modal.style.display = 'flex';
 
-    // 获取已保存的配置
+    // 获取已保存的配置（从服务器读取）
     fetch(`${API_BASE}/ths/config`)
         .then(res => res.json())
         .then(config => {
             if (config.hasUserId) {
-                document.getElementById('thsUserId').value = localStorage.getItem('ths_user_id') || '';
+                document.getElementById('thsUserId').value = config.userId || '';
+            }
+            if (config.hasFundKey) {
+                document.getElementById('thsFundKey').value = config.fundKey || '';
             }
             if (config.hasCookie) {
-                document.getElementById('thsCookie').value = localStorage.getItem('ths_cookie') || '';
+                document.getElementById('thsCookie').value = config.cookie || '';
             }
         })
         .catch(err => {
@@ -30,24 +33,26 @@ function closeThsConfigModal() {
 // 保存同花顺配置
 function saveThsConfig() {
     const userId = document.getElementById('thsUserId').value.trim();
+    const fundKey = document.getElementById('thsFundKey').value.trim();
     const cookie = document.getElementById('thsCookie').value.trim();
 
     if (!userId) {
-        alert('请输入用户ID');
+        showToast('请输入用户ID', 'error');
+        return;
+    }
+    if (!fundKey) {
+        showToast('请输入FundKey', 'error');
         return;
     }
     if (!cookie) {
-        alert('请输入Cookie');
+        showToast('请输入Cookie', 'error');
         return;
     }
-
-    // 保存到本地
-    localStorage.setItem('ths_user_id', userId);
-    localStorage.setItem('ths_cookie', cookie);
 
     // 保存到服务器
     const formData = new URLSearchParams();
     formData.append('userId', userId);
+    formData.append('fundKey', fundKey);
     formData.append('cookie', cookie);
 
     fetch(`${API_BASE}/ths/saveCookie`, {
@@ -57,60 +62,61 @@ function saveThsConfig() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('配置保存成功！');
+            showToast('配置保存成功！');
             closeThsConfigModal();
         } else {
-            alert('保存失败: ' + data.error);
+            showToast('保存失败: ' + data.error, 'error');
         }
     })
     .catch(err => {
-        alert('保存失败: ' + err.message);
+        showToast('保存失败: ' + err.message, 'error');
     });
 }
 
 // 从同花顺导入数据
 function importThsData() {
-    // 检查是否已配置
-    const userId = localStorage.getItem('ths_user_id');
-    const cookie = localStorage.getItem('ths_cookie');
-
-    if (!userId || !cookie) {
-        alert('请先配置同花顺Cookie和用户ID');
-        openThsConfigModal();
-        return;
-    }
-
-    // 发送请求获取数据
-    fetch(`${API_BASE}/ths/clearedPositions?year=${currentYear}&month=${currentMonth}`)
+    // 检查是否已配置（从服务器获取）
+    fetch(`${API_BASE}/ths/config`)
         .then(res => res.json())
+        .then(config => {
+            if (!config.hasUserId || !config.hasFundKey || !config.hasCookie) {
+                showToast('请先配置同花顺Cookie、用户ID和FundKey', 'error');
+                openThsConfigModal();
+                return;
+            }
+            // 发送请求获取数据
+            return fetch(`${API_BASE}/ths/clearedPositions?year=${currentYear}&month=${currentMonth}`);
+        })
+        .then(res => res ? res.json() : null)
         .then(data => {
+            if (!data) return;
             if (data.success) {
                 if (data.data && data.data.length > 0) {
-                    // 将数据填入自我收益表格
                     fillSelfProfitTableFromThs(data.data);
-                    alert(`成功导入 ${data.data.length} 条数据！`);
+                    showToast(`成功导入 ${data.data.length} 条数据！`);
                 } else {
-                    alert('该月没有平仓记录');
+                    showToast('该月没有平仓记录', 'info');
                 }
             } else if (data.error === 'cookie_expired') {
-                alert('Cookie已过期，请重新配置！');
+                showToast('Cookie已过期，请重新配置！', 'error');
                 openThsConfigModal();
             } else {
-                alert('获取数据失败: ' + data.message);
+                showToast('获取数据失败: ' + data.message, 'error');
             }
         })
         .catch(err => {
-            alert('获取数据失败: ' + err.message);
+            showToast('获取数据失败: ' + err.message, 'error');
         });
 }
 
 // 刷新每日/月累计数据
 async function refreshDailyProfit() {
-    const userId = localStorage.getItem('ths_user_id');
-    const cookie = localStorage.getItem('ths_cookie');
+    // 检查是否已配置（从服务器获取）
+    const configRes = await fetch(`${API_BASE}/ths/config`);
+    const config = await configRes.json();
 
-    if (!userId || !cookie) {
-        alert('请先配置同花顺Cookie和用户ID');
+    if (!config.hasUserId || !config.hasFundKey || !config.hasCookie) {
+        showToast('请先配置同花顺Cookie、用户ID和FundKey', 'error');
         openThsConfigModal();
         return;
     }
@@ -121,10 +127,10 @@ async function refreshDailyProfit() {
 
         if (!data.success || !data.data) {
             if (data.error === 'cookie_expired') {
-                alert('Cookie已过期，请重新配置！');
+                showToast('Cookie已过期，请重新配置！', 'error');
                 openThsConfigModal();
             } else {
-                alert('刷新失败: ' + (data.message || '未知错误'));
+                showToast('刷新失败: ' + (data.message || '未知错误'), 'error');
             }
             return;
         }
@@ -203,9 +209,9 @@ async function refreshDailyProfit() {
             updateAmountDisplay();
         }
 
-        alert('数据刷新完成！');
+        showToast('数据刷新完成！');
     } catch (err) {
-        alert('刷新失败: ' + err.message);
+        showToast('刷新失败: ' + err.message, 'error');
     }
 }
 

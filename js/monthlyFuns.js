@@ -996,7 +996,7 @@ async function saveMonthDataWithoutAlert() {
 // 保存月份数据（带提示）
 async function saveMonthData() {
     await saveMonthDataWithoutAlert();
-    alert(`${currentYear}年${currentMonth}月数据保存成功！`);
+    showToast(`${currentYear}年${currentMonth}月数据保存成功！`);
 }
 
 // 收集表格数据

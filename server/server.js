@@ -2,7 +2,7 @@
 const http = require('http');
 const https = require('https');
 const { getMonthDateRange, getOffDays } = require('./holidays');
-const { getClearedPositions, getDailyProfit, getSavedCookie, saveCookie, getSavedUserId, saveUserId, saveTHSInfo } = require('./tongHuaShunNote');
+const { getClearedPositions, getDailyProfit, getSavedCookie, saveCookie, getSavedUserId, getSavedFundKey, saveUserId, saveTHSInfo } = require('./tongHuaShunNote');
 const { getDailyData, saveDailyData, getMonthlyData, saveMonthlyData, getYearsData, saveYearsData, addYear, deleteYear } = require('./dataManager');
 
 const PORT = process.argv[2] || 9999;
@@ -353,8 +353,9 @@ async function handleRequest(req, res) {
 
         const cookie = getSavedCookie();
         const userId = getSavedUserId();
+        const fundKey = getSavedFundKey();
 
-        const result = await getClearedPositions(cookie, userId, parseInt(year), parseInt(month));
+        const result = await getClearedPositions(cookie, userId, fundKey, parseInt(year), parseInt(month));
 
         res.writeHead(200, {
             'Content-Type': 'application/json',
@@ -377,11 +378,13 @@ async function handleRequest(req, res) {
 
         const cookie = getSavedCookie();
         const userId = getSavedUserId();
+        const fundKey = getSavedFundKey();
 
         console.log('[dailyProfit] Cookie:', cookie ? cookie.substring(0, 50) + '...' : 'null');
         console.log('[dailyProfit] UserId:', userId);
+        console.log('[dailyProfit] FundKey:', fundKey);
 
-        const result = await getDailyProfit(cookie, userId, parseInt(year), parseInt(month));
+        const result = await getDailyProfit(cookie, userId, fundKey, parseInt(year), parseInt(month));
 
         res.writeHead(200, {
             'Content-Type': 'application/json',
@@ -400,10 +403,11 @@ async function handleRequest(req, res) {
                 const params = new URLSearchParams(body);
                 const userId = params.get('userId');
                 const cookie = params.get('cookie');
+                const fundKey = params.get('fundKey');
 
                 // 合并保存
-                if (cookie || userId) {
-                    saveTHSInfo(cookie, userId);
+                if (cookie || userId || fundKey) {
+                    saveTHSInfo(cookie, userId, fundKey);
                 }
 
                 res.writeHead(200, {
@@ -426,6 +430,7 @@ async function handleRequest(req, res) {
     if (req.method === 'GET' && url.pathname === '/ths/config') {
         const cookie = getSavedCookie();
         const userId = getSavedUserId();
+        const fundKey = getSavedFundKey();
 
         res.writeHead(200, {
             'Content-Type': 'application/json',
@@ -433,7 +438,11 @@ async function handleRequest(req, res) {
         });
         res.end(JSON.stringify({
             hasCookie: !!cookie,
-            hasUserId: !!userId
+            hasUserId: !!userId,
+            hasFundKey: !!fundKey,
+            userId: userId || '',
+            fundKey: fundKey || '',
+            cookie: cookie || ''
         }));
         return;
     }
