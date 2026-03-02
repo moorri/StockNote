@@ -14,7 +14,7 @@
         <div class="header">
             <button class="icon-btn hide-amount-btn" id="hideAmountBtn" onclick="toggleAmountDisplay()" title="显示/隐藏金额"><img src="../photo/ico/close.png" alt="隐藏金额"></button>
             <button class="icon-btn exit-btn" onclick="shutdownServer()" title="退出"><img src="../photo/ico/Exit.png" alt="退出"></button>
-            <h1><select id="yearSelect" onchange="switchYear(this.value)" style="font-size:inherit;font-weight:bold;padding:0 10px;height:36px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;"></select>年股票操作总结 <button class="op-btn" onclick="addNewYear()" style="font-size:14px;padding:4px 10px;margin-left:10px;">新增</button><button class="op-btn delete-year-btn" onclick="deleteCurrentYear()" style="font-size:14px;padding:4px 10px;">删除</button></h1>
+            <h1><select id="yearSelect" onchange="switchYear(this.value)" style="font-size:inherit;font-weight:bold;padding:0 10px;height:36px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;"></select>年股票操作总结 <button class="op-btn" onclick="syncAllMonthsData()" style="font-size:14px;padding:4px 10px;">同步</button><button class="op-btn" onclick="addNewYear()" style="font-size:14px;padding:4px 10px;">新增</button><button class="op-btn delete-year-btn" onclick="deleteCurrentYear()" style="font-size:14px;padding:4px 10px;">删除</button></h1>
             <p>月度收益对比 | 全年表现汇总</p>
         </div>
 
@@ -65,6 +65,7 @@
     <script src="../js/yearSelect.js"></script>
     <script src="../js/chartModal.js"></script>
     <script src="../js/indexChart.js"></script>
+    <script src="../js/tongHuaShunNoteFuns.js"></script>
     <script src="../js/indexFuns.js"></script>
 </body>
 </html>

@@ -261,6 +261,256 @@ window.onload = function() {
     updateAmountDisplay(); // 恢复金额显示状态
 };
 
+// 同步选中年份下所有月份的收益数据
+async function syncAllMonthsData() {
+    const year = localStorage.getItem(YEAR_KEY);
+    if (!year) {
+        showToast('请先选择年份', 'error');
+        return;
+    }
+
+    // 检查是否已配置同花顺
+    const configRes = await fetch(`${API_BASE}/ths/config`);
+    const config = await configRes.json();
+
+    if (!config.hasUserId || !config.hasFundKey || !config.hasCookie) {
+        showToast('请先配置同花顺Cookie、用户ID和FundKey', 'error');
+        return;
+    }
+
+    // 获取当前月份（排除未来月份）
+    const now = new Date();
+    const currentMonth = now.getFullYear() === parseInt(year) ? now.getMonth() + 1 : 12;
+
+    showToast(`开始同步${year}年数据...`, 'info');
+
+    let successCount = 0;
+    let failCount = 0;
+
+    // 逐月同步
+    for (let month = 1; month <= currentMonth; month++) {
+        try {
+            // 1. 同步每日收益数据
+            const response = await fetch(`${API_BASE}/ths/dailyProfit?year=${year}&month=${month}`);
+            const data = await response.json();
+
+            if (!data.success || !data.data) {
+                if (data.error === 'cookie_expired') {
+                    showToast('Cookie已过期，请重新配置！', 'error');
+                    return;
+                }
+                failCount++;
+                continue;
+            }
+
+            const profitMap = data.data.profit_map || {};
+            const totalIndex = data.data.total_index || {};
+            const profitLossList = data.data.profit_loss_list || [];
+
+            const thsProfit = profitMap.stock_rate !== undefined ? profitMap.stock_rate * 100 : null;
+            const thsAmount = profitMap.stock_profit !== undefined ? profitMap.stock_profit : null;
+            const thsIndex = totalIndex["1A0001"] !== undefined ? totalIndex["1A0001"] * 100 : null;
+
+            // 保存月度收益到后台 (all_year.json)
+            const yearsData = await getYearsData() || {};
+            if (!yearsData[year]) {
+                yearsData[year] = {};
+            }
+            yearsData[year][month] = {
+                my: thsProfit !== null ? thsProfit : 0,
+                myAmount: thsAmount !== null ? thsAmount : 0,
+                index: thsIndex !== null ? thsIndex : 0
+            };
+            await saveYearsData(yearsData);
+
+            // 保存每日收益到后台 (daily-MM.json)
+            const dailyData = await getDailyData(year, month) || {};
+            for (const item of profitLossList) {
+                const dateStr = `${item.date.substring(0, 4)}-${item.date.substring(4, 6)}-${item.date.substring(6, 8)}`;
+                if (!dailyData[dateStr]) {
+                    dailyData[dateStr] = {};
+                }
+                dailyData[dateStr].dailyAmount = item.stock_profit !== undefined ? String(item.stock_profit) : '';
+                dailyData[dateStr].dailyProfit = item.stock_rate !== undefined ? (item.stock_rate * 100).toFixed(2) + '%' : '';
+                if (item.index && item.index["1A0001"] !== undefined) {
+                    dailyData[dateStr].dailyIndex = (item.index["1A0001"] * 100).toFixed(2) + '%';
+                }
+            }
+            await saveDailyData(year, month, dailyData);
+
+            // 2. 同步板块数据和股票数据（开盘啦）
+            try {
+                const dateRangeRes = await fetch(`${API_BASE}/dateRange?year=${year}&month=${month}`);
+                const dateRange = await dateRangeRes.json();
+                const startDate = `${year}-${String(month).padStart(2, '0')}-${String(dateRange.start).padStart(2, '0')}`;
+                const endDate = `${year}-${String(month).padStart(2, '0')}-${String(dateRange.end).padStart(2, '0')}`;
+
+                const kplParams = {
+                    Order: 1,
+                    st: 30,
+                    a: 'GetInterviewsByDateZS',
+                    c: 'StockLineData',
+                    PhoneOSNew: 1,
+                    DeviceID: '77cb70bc-fdb9-37a4-a993-4c5764859153',
+                    VerSion: '5.22.0.6',
+                    DEnd: endDate,
+                    Index: 0,
+                    DStart: startDate,
+                    apiv: 'w43'
+                };
+
+                // 获取板块数据
+                const [strengthData, riseData, moneyData] = await Promise.all([
+                    fetchKplApi({ ...kplParams, Type: 9 }),
+                    fetchKplApi({ ...kplParams, Type: 1 }),
+                    fetchKplApi({ ...kplParams, Type: 3 })
+                ]);
+
+                // 合并板块数据
+                const combinedSectors = [...strengthData.slice(0, 6), ...riseData.slice(0, 6), ...moneyData.slice(0, 6)];
+                const uniqueSectorMap = new Map();
+                combinedSectors.forEach(item => {
+                    const name = item['板块名称'];
+                    if (!uniqueSectorMap.has(name)) {
+                        uniqueSectorMap.set(name, item);
+                    }
+                });
+                const sectorData = Array.from(uniqueSectorMap.values());
+
+                // 获取股票数据
+                const stockParams = { ...kplParams, a: 'GetInterviewsByDateStock', FilterBJS: 1 };
+                const [riseStockData, moneyStockData] = await Promise.all([
+                    fetchKplApi({ ...stockParams, Type: 2 }),
+                    fetchKplApi({ ...stockParams, Type: 5 })
+                ]);
+                const combinedStocks = [...riseStockData.slice(0, 9), ...moneyStockData.slice(0, 9)];
+                const uniqueStockMap = new Map();
+                combinedStocks.forEach(item => {
+                    const name = item['股票名称'];
+                    if (!uniqueStockMap.has(name)) {
+                        uniqueStockMap.set(name, item);
+                    }
+                });
+                const stockData = Array.from(uniqueStockMap.values());
+
+                // 保存到月度数据 (monthly.json)
+                let monthlyData = await getMonthlyData(year) || {};
+                if (!monthlyData[String(month)]) {
+                    monthlyData[String(month)] = {};
+                }
+                if (sectorData.length > 0) {
+                    monthlyData[String(month)].sector = sectorData;
+                }
+                if (stockData.length > 0) {
+                    monthlyData[String(month)].stock = stockData;
+                }
+                await saveMonthlyData(year, monthlyData, 'syncAllMonthsData');
+            } catch (kplErr) {
+                console.error(`同步开盘啦数据失败:`, kplErr);
+            }
+
+            // 3. 同步自我收益数据（平仓记录）
+            try {
+                const clearedRes = await fetch(`${API_BASE}/ths/clearedPositions?year=${year}&month=${month}`);
+                const clearedData = await clearedRes.json();
+
+                if (clearedData.success && clearedData.data && clearedData.data.length > 0) {
+                    // 转换平仓记录为自我收益格式
+                    const selfProfitData = clearedData.data.map(item => {
+                        const profitValue = parseFloat(item.total_profit || '0');
+                        const profitRate = item.total_profit_rate ? (parseFloat(item.total_profit_rate) * 100).toFixed(2) + '%' : '';
+                        // 手续费格式化
+                        const feeValue = parseFloat(item.fee || '0');
+                        const feeDisplay = feeValue > 0 ? feeValue.toFixed(2) : '';
+                        return {
+                            '名称': item.stock_name || '',
+                            '总盈亏': profitValue >= 0 ? '+' + profitValue.toFixed(2) : profitValue.toFixed(2),
+                            '盈亏比': profitRate,
+                            '持有周期': item.hold_days || '',
+                            '买入价格': item.buy_price || '',
+                            '卖出价格': item.sell_price || '',
+                            '手续费': feeDisplay,
+                            '备注': '自动同步'
+                        };
+                    });
+
+                    // 保存到月度数据 (monthly.json)
+                    let monthlyData = await getMonthlyData(year) || {};
+                    if (!monthlyData[String(month)]) {
+                        monthlyData[String(month)] = {};
+                    }
+                    monthlyData[String(month)].selfProfit = selfProfitData;
+                    await saveMonthlyData(year, monthlyData, 'syncAllMonthsData');
+                }
+            } catch (clearedErr) {
+                console.error(`同步平仓记录失败:`, clearedErr);
+            }
+
+            successCount++;
+        } catch (err) {
+            console.error(`同步${year}年${month}月数据失败:`, err);
+            failCount++;
+        }
+    }
+
+    // 刷新页面数据
+    await loadData(false);
+
+    if (failCount === 0) {
+        showToast(`同步完成！成功同步${successCount}个月的数据`, 'success');
+    } else {
+        showToast(`同步完成：成功${successCount}个月，失败${failCount}个月`, 'info');
+    }
+}
+
+// 开盘啦API请求辅助函数
+async function fetchKplApi(params) {
+    const formData = new URLSearchParams(params).toString();
+    const response = await fetch(API_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData
+    });
+    const data = await response.json();
+    if (data.List && data.List.length > 0) {
+        return parseKplData(data, params.a);
+    }
+    return [];
+}
+
+// 解析开盘啦API数据
+function parseKplData(data, apiType) {
+    const list = data.List || [];
+    if (apiType === 'GetInterviewsByDateStock') {
+        return list.slice(0, 8).map(item => ({
+            '股票名称': item[1] || '',
+            '板块': item[10] || '',
+            '区间涨幅': (item[3] || 0) + '%',
+            '区间净额': formatKplMoney(item[6] || 0)
+        }));
+    } else if (apiType === 'GetInterviewsByDateZS') {
+        return list.slice(0, 8).map(item => ({
+            '板块名称': item[1] || '',
+            '区间强度': item[11] || '',
+            '区间涨幅': (item[2] || 0) + '%',
+            '区间净额': formatKplMoney(item[5] || 0)
+        }));
+    }
+    return [];
+}
+
+// 格式化金额
+function formatKplMoney(amount) {
+    if (Math.abs(amount) >= 100000000) {
+        return (amount / 100000000).toFixed(2) + '亿';
+    } else if (Math.abs(amount) >= 10000) {
+        return (amount / 10000).toFixed(2) + '万';
+    }
+    return amount.toString();
+}
+
+window.syncAllMonthsData = syncAllMonthsData;
+
 // 初始化对比图表
 // initComparisonChart 已在 indexChart.js 中定义
 
