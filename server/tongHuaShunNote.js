@@ -13,11 +13,12 @@ const COOKIE_FILE = path.join(__dirname, '..', 'data', 'cookie.js');
 /**
  * 保存同花顺认证信息到本地
  */
-function saveTHSInfo(cookie, userId) {
+function saveTHSInfo(cookie, userId, fundKey) {
     try {
         const content = `module.exports = {
     cookie: ${JSON.stringify(cookie)},
-    userId: ${JSON.stringify(userId)}
+    userId: ${JSON.stringify(userId)},
+    fundKey: ${JSON.stringify(fundKey)}
 };`;
         fs.writeFileSync(COOKIE_FILE, content, 'utf8');
         return true;
@@ -38,13 +39,13 @@ function getTHSInfo() {
     } catch (e) {
         console.error('读取同花顺信息失败:', e);
     }
-    return { cookie: null, userId: null };
+    return { cookie: null, userId: null, fundKey: null };
 }
 
 // 兼容旧接口
 function saveCookie(cookie) {
     const info = getTHSInfo();
-    return saveTHSInfo(cookie, info.userId);
+    return saveTHSInfo(cookie, info.userId, info.fundKey);
 }
 
 function getSavedCookie() {
@@ -54,7 +55,7 @@ function getSavedCookie() {
 
 function saveUserId(userId) {
     const info = getTHSInfo();
-    return saveTHSInfo(info.cookie, userId);
+    return saveTHSInfo(info.cookie, userId, info.fundKey);
 }
 
 function getSavedUserId() {
@@ -106,16 +107,20 @@ function requestAPI(postData) {
  * 获取平仓记录
  * @param {string} cookie - Cookie
  * @param {string} userId - 用户ID
+ * @param {string} fundKey - 基金账户key
  * @param {number} year - 年份
  * @param {number} month - 月份
  * @returns {Promise<{success: boolean, data?: array, error?: string}>}
  */
-async function getClearedPositions(cookie, userId, year, month) {
+async function getClearedPositions(cookie, userId, fundKey, year, month) {
     if (!cookie) {
         return { success: false, error: 'cookie_missing', message: '请先填写Cookie' };
     }
     if (!userId) {
         return { success: false, error: 'userid_missing', message: '请先填写用户ID' };
+    }
+    if (!fundKey) {
+        return { success: false, error: 'fundkey_missing', message: '请先填写FundKey' };
     }
 
     // 计算月初和月末
@@ -127,7 +132,7 @@ async function getClearedPositions(cookie, userId, year, month) {
         version: '0.0.0',
         userid: userId,
         user_id: userId,
-        fund_key: '54602109',
+        fund_key: fundKey,
         group_by: 'stock',
         open_date: startDate,
         close_date: endDate
