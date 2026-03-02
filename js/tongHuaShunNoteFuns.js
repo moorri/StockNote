@@ -37,15 +37,15 @@ function saveThsConfig() {
     const cookie = document.getElementById('thsCookie').value.trim();
 
     if (!userId) {
-        alert('请输入用户ID');
+        showToast('请输入用户ID', 'error');
         return;
     }
     if (!fundKey) {
-        alert('请输入FundKey');
+        showToast('请输入FundKey', 'error');
         return;
     }
     if (!cookie) {
-        alert('请输入Cookie');
+        showToast('请输入Cookie', 'error');
         return;
     }
 
@@ -62,14 +62,14 @@ function saveThsConfig() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('配置保存成功！');
+            showToast('配置保存成功！');
             closeThsConfigModal();
         } else {
-            alert('保存失败: ' + data.error);
+            showToast('保存失败: ' + data.error, 'error');
         }
     })
     .catch(err => {
-        alert('保存失败: ' + err.message);
+        showToast('保存失败: ' + err.message, 'error');
     });
 }
 
@@ -80,7 +80,7 @@ function importThsData() {
         .then(res => res.json())
         .then(config => {
             if (!config.hasUserId || !config.hasFundKey || !config.hasCookie) {
-                alert('请先配置同花顺Cookie、用户ID和FundKey');
+                showToast('请先配置同花顺Cookie、用户ID和FundKey', 'error');
                 openThsConfigModal();
                 return;
             }
@@ -93,19 +93,19 @@ function importThsData() {
             if (data.success) {
                 if (data.data && data.data.length > 0) {
                     fillSelfProfitTableFromThs(data.data);
-                    alert(`成功导入 ${data.data.length} 条数据！`);
+                    showToast(`成功导入 ${data.data.length} 条数据！`);
                 } else {
-                    alert('该月没有平仓记录');
+                    showToast('该月没有平仓记录', 'info');
                 }
             } else if (data.error === 'cookie_expired') {
-                alert('Cookie已过期，请重新配置！');
+                showToast('Cookie已过期，请重新配置！', 'error');
                 openThsConfigModal();
             } else {
-                alert('获取数据失败: ' + data.message);
+                showToast('获取数据失败: ' + data.message, 'error');
             }
         })
         .catch(err => {
-            alert('获取数据失败: ' + err.message);
+            showToast('获取数据失败: ' + err.message, 'error');
         });
 }
 
@@ -116,7 +116,7 @@ async function refreshDailyProfit() {
     const config = await configRes.json();
 
     if (!config.hasUserId || !config.hasFundKey || !config.hasCookie) {
-        alert('请先配置同花顺Cookie、用户ID和FundKey');
+        showToast('请先配置同花顺Cookie、用户ID和FundKey', 'error');
         openThsConfigModal();
         return;
     }
@@ -127,10 +127,10 @@ async function refreshDailyProfit() {
 
         if (!data.success || !data.data) {
             if (data.error === 'cookie_expired') {
-                alert('Cookie已过期，请重新配置！');
+                showToast('Cookie已过期，请重新配置！', 'error');
                 openThsConfigModal();
             } else {
-                alert('刷新失败: ' + (data.message || '未知错误'));
+                showToast('刷新失败: ' + (data.message || '未知错误'), 'error');
             }
             return;
         }
@@ -209,9 +209,9 @@ async function refreshDailyProfit() {
             updateAmountDisplay();
         }
 
-        alert('数据刷新完成！');
+        showToast('数据刷新完成！');
     } catch (err) {
-        alert('刷新失败: ' + err.message);
+        showToast('刷新失败: ' + err.message, 'error');
     }
 }
 

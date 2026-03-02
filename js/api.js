@@ -103,7 +103,7 @@ async function shutdownServer() {
         console.error('关闭服务器失败:', error);
     }
     // 提示用户关闭浏览器
-    alert('服务器已关闭，请手动关闭浏览器窗口');
+    showToast('服务器已关闭，请手动关闭浏览器窗口');
 }
 
 // 新建年份

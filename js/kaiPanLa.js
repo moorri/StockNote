@@ -67,10 +67,10 @@ async function fetchKaiPanLaData() {
         // 填充股票表格
         fillTable('stockTable', stockResult);
 
-        alert(`${currentYear}年${currentMonth}月数据获取成功！\n板块数据：${sectorResult.length}条\n股票数据：${stockResult.length}条`);
+        showToast(`${currentYear}年${currentMonth}月数据获取成功！板块数据：${sectorResult.length}条，股票数据：${stockResult.length}条`);
     } catch (error) {
         console.error('获取数据失败:', error);
-        alert('获取数据失败，请检查网络连接');
+        showToast('获取数据失败，请检查网络连接', 'error');
     }
 }
 

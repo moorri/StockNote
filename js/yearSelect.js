@@ -139,7 +139,7 @@ async function addNewYear() {
 
     // 验证年份格式
     if (!/^\d{4}$/.test(newYear)) {
-        alert('请输入有效的4位年份！');
+        showToast('请输入有效的4位年份！', 'error');
         return;
     }
 
@@ -148,14 +148,14 @@ async function addNewYear() {
 
     // 检查年份是否已存在
     if (latestYearsData[newYear]) {
-        alert('该年份已存在！');
+        showToast('该年份已存在！', 'error');
         return;
     }
 
     // 调用后端API创建年份（会创建文件夹和all-years.json添加对象）
     const result = await addYear(newYear);
     if (!result.success) {
-        alert('创建年份失败！');
+        showToast('创建年份失败！', 'error');
         return;
     }
 
@@ -176,7 +176,7 @@ async function deleteCurrentYear() {
         // 从服务器读取最新数据
         const yearsDataLocal = await getYearsData();
         if (!yearsDataLocal) {
-            alert('没有数据可删除');
+            showToast('没有数据可删除', 'error');
             return;
         }
 
@@ -184,7 +184,7 @@ async function deleteCurrentYear() {
         const yearsCount = Object.keys(yearsDataLocal).length;
 
         if (yearsCount <= 1) {
-            alert('至少需要保留一个年份，不能删除！');
+            showToast('至少需要保留一个年份，不能删除！', 'error');
             return;
         }
 
@@ -200,7 +200,7 @@ async function deleteCurrentYear() {
         // 调用后端API删除年份（会删除photo/年份和data/年份文件夹，并从all-years.json删除）
         const result = await deleteYearApi(currentYear);
         if (!result.success) {
-            alert('删除年份失败！' + (result.error || ''));
+            showToast('删除年份失败！' + (result.error || ''), 'error');
             return;
         }
 
@@ -220,7 +220,7 @@ async function deleteCurrentYear() {
         await loadYearsList();
     } catch (e) {
         console.error('删除年份出错:', e);
-        alert('删除年份出错: ' + e.message);
+        showToast('删除年份出错: ' + e.message, 'error');
     }
 
     // 加载新年份数据（loadDefault=false 会清空显示）
