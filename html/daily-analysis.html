@@ -39,10 +39,16 @@
                 </thead>
                 <tbody>
                     <tr v-for="(w, i) in form.watchStocks" :key="i">
-                        <td><input type="text" v-model="w.股票名称" placeholder="股票名称"></td>
-                        <td><input type="text" v-model="w.板块" placeholder="如: 算力"></td>
-                        <td>
-                            <select v-model="w.形态">
+                        <td @click="toggleEdit(w, $event)">
+                            <input v-if="w._editing" type="text" v-model="w.股票名称"  placeholder="股票名称">
+                            <span v-else class="cell-text">{{ w.股票名称 || '点击编辑' }}</span>
+                        </td>
+                        <td @click="toggleEdit(w, $event)">
+                            <input v-if="w._editing" type="text" v-model="w.板块"  placeholder="如: 算力">
+                            <span v-else class="cell-text">{{ w.板块 || '点击编辑' }}</span>
+                        </td>
+                        <td @click="toggleEdit(w, $event)">
+                            <select v-if="w._editing" v-model="w.形态" >
                                 <option value="">选择形态</option>
                                 <option value="突破">突破</option>
                                 <option value="回调">回调</option>
@@ -51,14 +57,21 @@
                                 <option value="首板">首板</option>
                                 <option value="趋势">趋势</option>
                             </select>
+                            <span v-else class="cell-text">{{ w.形态 || '点击编辑' }}</span>
                         </td>
-                        <td><input type="text" v-model="w.量价特征" placeholder="如: 放量突破"></td>
-                        <td><input type="text" v-model="w.备注" placeholder="备注"></td>
+                        <td @click="toggleEdit(w, $event)">
+                            <input v-if="w._editing" type="text" v-model="w.量价特征"  placeholder="如: 放量突破">
+                            <span v-else class="cell-text">{{ w.量价特征 || '点击编辑' }}</span>
+                        </td>
+                        <td @click="toggleEdit(w, $event)">
+                            <input v-if="w._editing" type="text" v-model="w.备注"  placeholder="备注">
+                            <span v-else class="cell-text">{{ w.备注 || '点击编辑' }}</span>
+                        </td>
                         <td><button class="btn-del-row" @click="form.watchStocks.splice(i, 1)">删除</button></td>
                     </tr>
                 </tbody>
             </table>
-            <button class="btn-add-row" @click="form.watchStocks.push({股票名称:'',板块:'',形态:'',量价特征:'',备注:''})">+ 添加</button>
+            <button class="btn-add-row" @click="form.watchStocks.push(createWatchStock())">+ 添加</button>
         </div>
 
         <!-- 本日收益（从API获取，只读显示） -->
@@ -76,6 +89,10 @@
                 <div class="market-info-item">
                     <label>上证涨幅</label>
                     <span class="readonly-value" :class="form.dailyIndex && parseFloat(form.dailyIndex.replace('%','')) > 0 ? 'red' : (form.dailyIndex && parseFloat(form.dailyIndex.replace('%','')) < 0 ? 'green' : '')">{{ form.dailyIndex || '--' }}</span>
+                </div>
+                <div class="market-info-item">
+                    <label>仓位</label>
+                    <input type="text" v-model="form.position" placeholder="如: 80%" style="width: 60px;">
                 </div>
             </div>
         </div>
@@ -148,23 +165,36 @@
                 </thead>
                 <tbody>
                     <tr v-for="(h, i) in form.highBoards" :key="i">
-                        <td><input type="text" v-model="h.股票名称" placeholder="如: 杭钢股份"></td>
-                        <td><input type="text" v-model="h.板块" placeholder="如: DeepSeek"></td>
-                        <td><input type="text" v-model="h.板数" placeholder="如: 7板"></td>
-                        <td>
-                            <select v-model="h.类型">
+                        <td @click="toggleEdit(h, $event)">
+                            <input v-if="h._editing" type="text" v-model="h.股票名称"  placeholder="如: 杭钢股份">
+                            <span v-else class="cell-text">{{ h.股票名称 || '点击编辑' }}</span>
+                        </td>
+                        <td @click="toggleEdit(h, $event)">
+                            <input v-if="h._editing" type="text" v-model="h.板块"  placeholder="如: DeepSeek">
+                            <span v-else class="cell-text">{{ h.板块 || '点击编辑' }}</span>
+                        </td>
+                        <td @click="toggleEdit(h, $event)">
+                            <input v-if="h._editing" type="text" v-model="h.板数"  placeholder="如: 7板">
+                            <span v-else class="cell-text">{{ h.板数 || '点击编辑' }}</span>
+                        </td>
+                        <td @click="toggleEdit(h, $event)">
+                            <select v-if="h._editing" v-model="h.类型" >
                                 <option value="核心">核心</option>
                                 <option value="补涨">补涨</option>
                                 <option value="卡位">卡位</option>
                                 <option value="换手">换手</option>
                             </select>
+                            <span v-else class="cell-text">{{ h.类型 || '点击编辑' }}</span>
                         </td>
-                        <td><input type="text" v-model="h.备注" placeholder="备注"></td>
+                        <td @click="toggleEdit(h, $event)">
+                            <input v-if="h._editing" type="text" v-model="h.备注"  placeholder="备注">
+                            <span v-else class="cell-text">{{ h.备注 || '点击编辑' }}</span>
+                        </td>
                         <td><button class="btn-del-row" @click="form.highBoards.splice(i, 1)">删除</button></td>
                     </tr>
                 </tbody>
             </table>
-            <button class="btn-add-row" @click="form.highBoards.push({股票名称:'',板块:'',板数:'',类型:'核心',备注:''})">+ 添加</button>
+            <button class="btn-add-row" @click="form.highBoards.push(createHighBoard())">+ 添加</button>
         </div>
 
         <!-- 今日操作记录 -->
@@ -184,22 +214,38 @@
                 </thead>
                 <tbody>
                     <tr v-for="(o, i) in form.operations" :key="i">
-                        <td><input type="text" v-model="o.标的" placeholder="股票名称"></td>
-                        <td>
-                            <div class="operation-type">
-                                <button :class="{active: o.买卖==='买'}" @click="o.买卖='买'">买</button>
-                                <button :class="{active: o.买卖==='卖'}" @click="o.买卖='卖'">卖</button>
-                            </div>
+                        <td @click="toggleEdit(o, $event)">
+                            <input v-if="o._editing" type="text" v-model="o.标的"  placeholder="股票名称">
+                            <span v-else class="cell-text">{{ o.标的 || '点击编辑' }}</span>
                         </td>
-                        <td><input type="text" v-model="o.仓位" placeholder="如: 10%"></td>
-                        <td><input type="text" v-model="o.买入理由" placeholder="为什么买"></td>
-                        <td><input type="text" v-model="o.卖点记录" placeholder="卖点/卖飞/止损"></td>
-                        <td><input type="text" v-model="o.结果" placeholder="待结算/盈利/亏损"></td>
+                        <td @click="toggleEdit(o, $event)">
+                            <div v-if="o._editing" class="operation-type">
+                                <button :class="{active: o.买卖==='买'}" @click="o.买卖='买';o._editing=false">买</button>
+                                <button :class="{active: o.买卖==='卖'}" @click="o.买卖='卖';o._editing=false">卖</button>
+                            </div>
+                            <span v-else class="cell-text">{{ o.买卖 || '点击编辑' }}</span>
+                        </td>
+                        <td @click="toggleEdit(o, $event)">
+                            <input v-if="o._editing" type="text" v-model="o.仓位"  placeholder="如: 10%">
+                            <span v-else class="cell-text">{{ o.仓位 || '点击编辑' }}</span>
+                        </td>
+                        <td @click="toggleEdit(o, $event)">
+                            <input v-if="o._editing" type="text" v-model="o.买入理由"  placeholder="为什么买">
+                            <span v-else class="cell-text">{{ o.买入理由 || '点击编辑' }}</span>
+                        </td>
+                        <td @click="toggleEdit(o, $event)">
+                            <input v-if="o._editing" type="text" v-model="o.卖点记录"  placeholder="卖点/卖飞/止损">
+                            <span v-else class="cell-text">{{ o.卖点记录 || '点击编辑' }}</span>
+                        </td>
+                        <td @click="toggleEdit(o, $event)">
+                            <input v-if="o._editing" type="text" v-model="o.结果"  placeholder="待结算/盈利/亏损">
+                            <span v-else class="cell-text">{{ o.结果 || '点击编辑' }}</span>
+                        </td>
                         <td><button class="btn-del-row" @click="form.operations.splice(i, 1)">删除</button></td>
                     </tr>
                 </tbody>
             </table>
-            <button class="btn-add-row" @click="form.operations.push({标的:'',买卖:'买',仓位:'',买入理由:'',卖点记录:'',结果:''})">+ 添加</button>
+            <button class="btn-add-row" @click="form.operations.push(createOperation())">+ 添加</button>
         </div>
 
         <!-- 明日计划 -->

@@ -71,6 +71,7 @@ createApp({
             dailyAmount: '',
             dailyProfit: '',
             dailyIndex: '',
+            position: '',
             shIndex: '',
             ztDt: '',
             maxBoard: '',
@@ -88,6 +89,31 @@ createApp({
             随笔: ''
         });
 
+        // 数组项模板（带编辑状态）
+        const createWatchStock = () => ({ 股票名称: '', 板块: '', 形态: '', 量价特征: '', 备注: '', _editing: true });
+        const createHighBoard = () => ({ 股票名称: '', 板块: '', 板数: '', 类型: '核心', 备注: '', _editing: true });
+        const createOperation = () => ({ 标的: '', 买卖: '买', 仓位: '', 买入理由: '', 卖点记录: '', 结果: '', _editing: true });
+
+        // 切换编辑状态
+        const toggleEdit = (item, event) => {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            // 如果已经在编辑状态，不做任何事（让 input 获得焦点）
+            if (item._editing) {
+                return;
+            }
+            item._editing = true;
+        };
+
+        // 失去焦点时退出编辑模式（延迟执行，让点击其他地方先触发）
+        const onBlur = (item) => {
+            setTimeout(() => {
+                item._editing = false;
+            }, 200);
+        };
+
         // 表单数据
         const form = ref(emptyForm());
 
@@ -104,14 +130,43 @@ createApp({
             }
         });
 
+        // 获取下一个开盘日
+        const getNextTradingDay = async (current, delta) => {
+            const year = current.getFullYear();
+            const offDays = await getOffDays(year);
+            const offDaysSet = new Set(offDays.map(d => d.replace(/-/g, '')));
+
+            const newDate = new Date(current);
+            newDate.setDate(newDate.getDate() + delta);
+
+            // 循环查找开盘日（跳过周末和休市日）
+            while (true) {
+                // 使用本地时间获取日期字符串（不用 toISOString，会受时区影响）
+                const y = newDate.getFullYear();
+                const m = String(newDate.getMonth() + 1).padStart(2, '0');
+                const d = String(newDate.getDate()).padStart(2, '0');
+                const dateStr = `${y}${m}${d}`;
+                const dayOfWeek = newDate.getDay();
+
+                // 如果是周末或休市日，继续向前/后找
+                if (dayOfWeek === 0 || dayOfWeek === 6 || offDaysSet.has(dateStr)) {
+                    newDate.setDate(newDate.getDate() + delta);
+                } else {
+                    break;
+                }
+            }
+            return newDate;
+        };
+
         // 切换日期（自动保存当前数据）
         const changeDate = async (delta) => {
             // 先保存当前数据
             await saveData();
-            // 然后切换日期
-            const newDate = new Date(currentDate.value);
-            newDate.setDate(newDate.getDate() + delta);
+            // 切换到下一个开盘日
+            const newDate = await getNextTradingDay(currentDate.value, delta);
             currentDate.value = newDate;
+            // 等待 Vue 更新 dateKey 后再加载数据
+            await Vue.nextTick();
             await loadData();
         };
 
@@ -123,18 +178,26 @@ createApp({
             const data = all[dateKey.value];
             if (data) {
                 // 合并数据，确保数组字段是有效数组（防空对象覆盖空数组）
+                // 给每个数组项添加 _editing = false，确保显示为纯文本
+                const fixEditing = (arr) => {
+                    if (Array.isArray(arr)) {
+                        arr.forEach(item => { item._editing = false; });
+                    }
+                    return arr;
+                };
                 form.value = {
                     ...emptyForm(),
                     ...data,
-                    sectors: Array.isArray(data.sectors) ? data.sectors : [],
-                    highBoards: Array.isArray(data.highBoards) ? data.highBoards : [],
-                    watchStocks: Array.isArray(data.watchStocks) ? data.watchStocks : [],
-                    operations: Array.isArray(data.operations) ? data.operations : []
+                    sectors: Array.isArray(data.sectors) ? fixEditing(data.sectors) : [],
+                    highBoards: Array.isArray(data.highBoards) ? fixEditing(data.highBoards) : [],
+                    watchStocks: Array.isArray(data.watchStocks) ? fixEditing(data.watchStocks) : [],
+                    operations: Array.isArray(data.operations) ? fixEditing(data.operations) : []
                 };
             } else {
                 form.value = emptyForm();
             }
-            // 数据加载完成后更新金额显示状态
+            // 数据加载完成后更新金额显示状态（等待Vue DOM更新后执行）
+            await Vue.nextTick();
             updateAmountDisplay();
         };
 
@@ -163,7 +226,10 @@ createApp({
 
         // 暴露方法给外部调用
         window.appExpose = {
-            saveData
+            saveData,
+            currentDate,
+            dateKey,
+            form
         };
 
         // 首页按钮（返回前自动保存）
@@ -184,10 +250,93 @@ createApp({
             dateDisplay,
             form,
             changeDate,
-            saveData
+            saveData,
+            toggleEdit,
+            onBlur,
+            createWatchStock,
+            createHighBoard,
+            createOperation
         };
     }
 }).mount('#app');
 
 // Vue 渲染完成后恢复金额显示状态
-setTimeout(updateAmountDisplay, 100);
+Vue.nextTick(() => updateAmountDisplay());
+
+// 点击表格外部关闭编辑状态
+document.addEventListener('click', function(e) {
+    if (!window.appExpose) return;
+    const form = window.appExpose.form;
+    if (!form || !form.value) return;
+
+    // 如果点击的是表格内的任何元素，不关闭编辑状态
+    if (e.target.closest('.daily-table')) {
+        return;
+    }
+
+    // 点击表格外部，关闭所有编辑状态
+    const arrays = [form.value.watchStocks, form.value.highBoards, form.value.operations];
+    arrays.forEach(arr => {
+        if (Array.isArray(arr)) {
+            arr.forEach(item => {
+                if (item._editing) item._editing = false;
+            });
+        }
+    });
+});
+
+// input/select 获得焦点时，不关闭编辑状态
+document.addEventListener('focusin', function(e) {
+    if (!window.appExpose) return;
+    const form = window.appExpose.form;
+    if (!form || !form.value) return;
+
+    // 如果焦点在表格内，不做任何事
+    if (e.target.closest('.daily-table')) {
+        return;
+    }
+});
+
+// 保存数据的同步版本（用于页面关闭时）
+function saveDataSync() {
+    if (!window.appExpose) return;
+
+    const app = window.appExpose;
+    const currentDate = app.currentDate;
+    const form = app.form;
+    if (!currentDate || !form) return;
+
+    const year = currentDate.value.getFullYear();
+    const month = currentDate.value.getMonth() + 1;
+    const dateKey = app.dateKey?.value;
+
+    // 同步获取本地数据并保存
+    fetch(`${API_BASE}/daily/get?year=${year}&month=${month}`)
+        .then(r => r.json())
+        .then(all => {
+            all[dateKey] = { ...form.value };
+            const formData = new URLSearchParams({year, month, data: JSON.stringify(all)});
+            fetch(`${API_BASE}/daily/save`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: formData
+            });
+        });
+}
+
+// 页面隐藏时自动保存数据
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') {
+        saveDataSync();
+    }
+});
+
+// 页面关闭前尝试保存数据
+window.addEventListener('beforeunload', function(e) {
+    saveDataSync();
+});
+
+// 页面刷新时保存数据
+window.addEventListener('pagehide', function() {
+    saveDataSync();
+});

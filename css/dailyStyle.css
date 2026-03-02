@@ -141,6 +141,22 @@ body {
     border: 1px solid #ddd;
     border-radius: 4px;
 }
+.daily-table td {
+    cursor: pointer;
+    padding: 0;
+}
+.cell-text {
+    display: block;
+    padding: 6px 8px;
+    min-height: 20px;
+    color: #333;
+    font-size: 13px;
+}
+.cell-text:empty::before {
+    content: '点击编辑';
+    color: #bbb;
+    font-style: italic;
+}
 .btn-add-row {
     margin-top: 10px;
     padding: 6px 12px;

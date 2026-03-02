@@ -1,5 +1,6 @@
 // API基础地址
 const API_BASE = 'http://localhost:3001';
+window.API_BASE = API_BASE;
 
 // API调用公共函数
 
