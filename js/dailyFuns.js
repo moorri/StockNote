@@ -130,6 +130,124 @@ createApp({
             }
         });
 
+        // 仓位编辑状态
+        const positionEditing = ref(false);
+
+        // 切换仓位编辑状态
+        const togglePositionEdit = (event) => {
+            if (event) {
+                event.stopPropagation();
+            }
+            positionEditing.value = true;
+            // 自动获焦
+            setTimeout(() => {
+                const input = document.querySelector('.position-input');
+                if (input) input.focus();
+            }, 50);
+        };
+
+        // 仓位失去焦点
+        const onPositionBlur = () => {
+            // 自动加 %
+            if (form.value.position && !form.value.position.includes('%')) {
+                form.value.position = form.value.position + '%';
+            }
+            positionEditing.value = false;
+        };
+
+        // 获取仓位样式类
+        const getPositionClass = (val) => {
+            if (!val) return '';
+            const num = parseFloat(val.replace('%', ''));
+            if (num > 70) return 'danger';
+            if (num >= 40) return 'normal';
+            return 'light';
+        };
+
+        // 行情概述编辑状态
+        const marketEditing = ref(false);
+
+        // 切换行情编辑状态
+        const toggleMarketEdit = (event) => {
+            if (event) {
+                event.stopPropagation();
+            }
+            marketEditing.value = true;
+            // 自动获焦
+            setTimeout(() => {
+                const target = event?.target;
+                if (target && target.tagName === 'INPUT') {
+                    target.focus();
+                } else if (target && target.tagName === 'SELECT') {
+                    target.focus();
+                }
+            }, 50);
+        };
+
+        // 行情概述失去焦点
+        const onMarketBlur = () => {
+            setTimeout(() => {
+                marketEditing.value = false;
+            }, 200);
+        };
+
+        // 获取上证指数颜色
+        const getShIndexClass = (val) => {
+            if (!val) return '';
+            const num = parseFloat(val.replace('%', ''));
+            if (num > 0) return 'red';
+            if (num < 0) return 'green';
+            return '';
+        };
+
+        // 获取涨跌停颜色
+        const getZtDtClass = (val) => {
+            if (!val) return '';
+            const parts = val.split('/');
+            if (parts.length >= 2) {
+                const up = parseInt(parts[0]) || 0;
+                const down = parseInt(parts[1]) || 0;
+                if (up > down) return 'red';
+                if (down > up) return 'green';
+            }
+            return '';
+        };
+
+        // 获取涨跌停显示文本（格式：80(红)/5(绿)，即涨停数红色/跌停数绿色）
+        const getZtDtDisplay = (val) => {
+            if (!val) return '';
+            const parts = val.split('/');
+            if (parts.length >= 2) {
+                const up = parseInt(parts[0]) || 0;
+                const down = parseInt(parts[1]) || 0;
+                return `<span class="zt-red">${up}</span>/<span class="zt-green">${down}</span>`;
+            }
+            return val;
+        };
+
+        // 获取情绪周期颜色
+        const getEmotionClass = (val) => {
+            const colorMap = {
+                '上升期': 'red',
+                '反弹': 'red',
+                '分歧': 'orange',
+                '退潮': 'green',
+                '冰点': 'blue'
+            };
+            return colorMap[val] || '';
+        };
+
+        // 监听涨幅，自动添加 %
+        watch(() => form.value.sectors, (newVal) => {
+            if (Array.isArray(newVal)) {
+                newVal.forEach(s => {
+                    if (s.涨幅 && !s.涨幅.includes('%')) {
+                        s.涨幅 = s.涨幅 + '%';
+                    }
+                });
+            }
+        }, { deep: true });
+
         // 获取下一个开盘日
         const getNextTradingDay = async (current, delta) => {
             const year = current.getFullYear();
@@ -255,7 +373,18 @@ createApp({
             onBlur,
             createWatchStock,
             createHighBoard,
-            createOperation
+            createOperation,
+            positionEditing,
+            togglePositionEdit,
+            onPositionBlur,
+            getPositionClass,
+            marketEditing,
+            toggleMarketEdit,
+            onMarketBlur,
+            getShIndexClass,
+            getZtDtClass,
+            getZtDtDisplay,
+            getEmotionClass
         };
     }
 }).mount('#app');
@@ -266,12 +395,23 @@ Vue.nextTick(() => updateAmountDisplay());
 // 点击表格外部关闭编辑状态
 document.addEventListener('click', function(e) {
     if (!window.appExpose) return;
-    const form = window.appExpose.form;
+    const app = window.appExpose;
+    const form = app.form;
     if (!form || !form.value) return;
 
     // 如果点击的是表格内的任何元素，不关闭编辑状态
     if (e.target.closest('.daily-table')) {
         return;
+    }
+
+    // 如果点击的是今日行情概述区域，不关闭编辑状态
+    if (e.target.closest('.daily-section')) {
+        return;
+    }
+
+    // 关闭行情编辑状态
+    if (app.marketEditing && app.marketEditing.value) {
+        app.marketEditing.value = false;
     }
 
     // 点击表格外部，关闭所有编辑状态

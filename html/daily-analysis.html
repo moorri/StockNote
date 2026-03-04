@@ -41,11 +41,11 @@
                     <tr v-for="(w, i) in form.watchStocks" :key="i">
                         <td @click="toggleEdit(w, $event)">
                             <input v-if="w._editing" type="text" v-model="w.股票名称"  placeholder="股票名称">
-                            <span v-else class="cell-text">{{ w.股票名称 || '点击编辑' }}</span>
+                            <span v-else class="cell-text"><span v-if="w.股票名称">{{ w.股票名称 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
                         <td @click="toggleEdit(w, $event)">
                             <input v-if="w._editing" type="text" v-model="w.板块"  placeholder="如: 算力">
-                            <span v-else class="cell-text">{{ w.板块 || '点击编辑' }}</span>
+                            <span v-else class="cell-text"><span v-if="w.板块">{{ w.板块 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
                         <td @click="toggleEdit(w, $event)">
                             <select v-if="w._editing" v-model="w.形态" >
@@ -57,15 +57,15 @@
                                 <option value="首板">首板</option>
                                 <option value="趋势">趋势</option>
                             </select>
-                            <span v-else class="cell-text">{{ w.形态 || '点击编辑' }}</span>
+                            <span v-else class="cell-text"><span v-if="w.形态">{{ w.形态 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
                         <td @click="toggleEdit(w, $event)">
                             <input v-if="w._editing" type="text" v-model="w.量价特征"  placeholder="如: 放量突破">
-                            <span v-else class="cell-text">{{ w.量价特征 || '点击编辑' }}</span>
+                            <span v-else class="cell-text"><span v-if="w.量价特征">{{ w.量价特征 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
                         <td @click="toggleEdit(w, $event)">
                             <input v-if="w._editing" type="text" v-model="w.备注"  placeholder="备注">
-                            <span v-else class="cell-text">{{ w.备注 || '点击编辑' }}</span>
+                            <span v-else class="cell-text"><span v-if="w.备注">{{ w.备注 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
                         <td><button class="btn-del-row" @click="form.watchStocks.splice(i, 1)">删除</button></td>
                     </tr>
@@ -92,30 +92,31 @@
                 </div>
                 <div class="market-info-item">
                     <label>仓位</label>
-                    <input type="text" v-model="form.position" placeholder="如: 80%" style="width: 60px;">
+                    <input v-if="positionEditing" type="text" v-model="form.position" @blur="onPositionBlur" class="position-input" placeholder="如: 80%" style="width: 80px;">
+                    <span v-else class="position-value" :class="getPositionClass(form.position)" @click="togglePositionEdit($event)">{{ form.position || '点击编辑' }}</span>
                 </div>
             </div>
         </div>
 
         <!-- 今日行情概述 -->
         <div class="daily-section">
-            <h2>今日行情概述</h2>
-            <div class="market-info">
+            <h2 @click="toggleMarketEdit($event)">今日行情概述</h2>
+            <div class="market-info" v-if="marketEditing">
                 <div class="market-info-item">
                     <label>上证指数</label>
-                    <input type="text" v-model="form.shIndex" placeholder="如: +0.5%">
+                    <input type="text" v-model="form.shIndex" @blur="onMarketBlur" placeholder="如: +0.5%">
                 </div>
                 <div class="market-info-item">
                     <label>涨跌停</label>
-                    <input type="text" v-model="form.ztDt" placeholder="如: 80/5">
+                    <input type="text" v-model="form.ztDt" @blur="onMarketBlur" placeholder="如: 80/5">
                 </div>
                 <div class="market-info-item">
                     <label>最高板</label>
-                    <input type="text" v-model="form.maxBoard" placeholder="如: 7板">
+                    <input type="text" v-model="form.maxBoard" @blur="onMarketBlur" placeholder="如: 7板">
                 </div>
                 <div class="market-info-item">
                     <label>情绪周期</label>
-                    <select v-model="form.emotionCycle">
+                    <select v-model="form.emotionCycle" @blur="onMarketBlur">
                         <option value="">请选择</option>
                         <option value="上升期">上升期</option>
                         <option value="分歧">分歧</option>
@@ -126,11 +127,37 @@
                 </div>
                 <div class="market-info-item">
                     <label>成交量</label>
-                    <input type="text" v-model="form.volume" placeholder="如: 1.2万亿">
+                    <input type="text" v-model="form.volume" @blur="onMarketBlur" placeholder="如: 1.2万亿">
                 </div>
                 <div class="market-info-item" style="grid-column: span 2;">
                     <label>大节点/关键事件</label>
-                    <input type="text" v-model="form.keyEvent" placeholder="如: 比亚迪发布会、DeepSeek发布新模型">
+                    <input type="text" v-model="form.keyEvent" @blur="onMarketBlur" placeholder="如: 比亚迪发布会、DeepSeek发布新模型">
+                </div>
+            </div>
+            <div class="market-info" v-else @click="toggleMarketEdit($event)">
+                <div class="market-info-item">
+                    <label>上证指数</label>
+                    <span class="value-text" :class="getShIndexClass(form.shIndex)">{{ form.shIndex || '点击编辑' }}</span>
+                </div>
+                <div class="market-info-item">
+                    <label>涨跌停</label>
+                    <span class="value-text" v-html="getZtDtDisplay(form.ztDt) || '点击编辑'"></span>
+                </div>
+                <div class="market-info-item">
+                    <label>最高板</label>
+                    <span class="value-text">{{ form.maxBoard || '点击编辑' }}</span>
+                </div>
+                <div class="market-info-item">
+                    <label>情绪周期</label>
+                    <span class="value-text" :class="getEmotionClass(form.emotionCycle)">{{ form.emotionCycle || '点击编辑' }}</span>
+                </div>
+                <div class="market-info-item">
+                    <label>成交量</label>
+                    <span class="value-text">{{ form.volume || '点击编辑' }}</span>
+                </div>
+                <div class="market-info-item" style="grid-column: span 2;">
+                    <label>大节点/关键事件</label>
+                    <span class="value-text">{{ form.keyEvent || '点击编辑' }}</span>
                 </div>
             </div>
         </div>
@@ -167,15 +194,15 @@
                     <tr v-for="(h, i) in form.highBoards" :key="i">
                         <td @click="toggleEdit(h, $event)">
                             <input v-if="h._editing" type="text" v-model="h.股票名称"  placeholder="如: 杭钢股份">
-                            <span v-else class="cell-text">{{ h.股票名称 || '点击编辑' }}</span>
+                            <span v-else class="cell-text"><span v-if="h.股票名称">{{ h.股票名称 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
                         <td @click="toggleEdit(h, $event)">
                             <input v-if="h._editing" type="text" v-model="h.板块"  placeholder="如: DeepSeek">
-                            <span v-else class="cell-text">{{ h.板块 || '点击编辑' }}</span>
+                            <span v-else class="cell-text"><span v-if="h.板块">{{ h.板块 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
                         <td @click="toggleEdit(h, $event)">
                             <input v-if="h._editing" type="text" v-model="h.板数"  placeholder="如: 7板">
-                            <span v-else class="cell-text">{{ h.板数 || '点击编辑' }}</span>
+                            <span v-else class="cell-text"><span v-if="h.板数">{{ h.板数 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
                         <td @click="toggleEdit(h, $event)">
                             <select v-if="h._editing" v-model="h.类型" >
@@ -184,11 +211,11 @@
                                 <option value="卡位">卡位</option>
                                 <option value="换手">换手</option>
                             </select>
-                            <span v-else class="cell-text">{{ h.类型 || '点击编辑' }}</span>
+                            <span v-else class="cell-text"><span v-if="h.类型">{{ h.类型 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
                         <td @click="toggleEdit(h, $event)">
                             <input v-if="h._editing" type="text" v-model="h.备注"  placeholder="备注">
-                            <span v-else class="cell-text">{{ h.备注 || '点击编辑' }}</span>
+                            <span v-else class="cell-text"><span v-if="h.备注">{{ h.备注 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
                         <td><button class="btn-del-row" @click="form.highBoards.splice(i, 1)">删除</button></td>
                     </tr>
@@ -216,30 +243,31 @@
                     <tr v-for="(o, i) in form.operations" :key="i">
                         <td @click="toggleEdit(o, $event)">
                             <input v-if="o._editing" type="text" v-model="o.标的"  placeholder="股票名称">
-                            <span v-else class="cell-text">{{ o.标的 || '点击编辑' }}</span>
+                            <span v-else class="cell-text"><span v-if="o.标的">{{ o.标的 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
                         <td @click="toggleEdit(o, $event)">
                             <div v-if="o._editing" class="operation-type">
                                 <button :class="{active: o.买卖==='买'}" @click="o.买卖='买';o._editing=false">买</button>
                                 <button :class="{active: o.买卖==='卖'}" @click="o.买卖='卖';o._editing=false">卖</button>
+                                <button :class="{active: o.买卖==='T'}" @click="o.买卖='T';o._editing=false">T</button>
                             </div>
-                            <span v-else class="cell-text">{{ o.买卖 || '点击编辑' }}</span>
+                            <span v-else class="cell-text"><span v-if="o.买卖">{{ o.买卖 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
                         <td @click="toggleEdit(o, $event)">
                             <input v-if="o._editing" type="text" v-model="o.仓位"  placeholder="如: 10%">
-                            <span v-else class="cell-text">{{ o.仓位 || '点击编辑' }}</span>
+                            <span v-else class="cell-text"><span v-if="o.仓位">{{ o.仓位 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
                         <td @click="toggleEdit(o, $event)">
                             <input v-if="o._editing" type="text" v-model="o.买入理由"  placeholder="为什么买">
-                            <span v-else class="cell-text">{{ o.买入理由 || '点击编辑' }}</span>
+                            <span v-else class="cell-text"><span v-if="o.买入理由">{{ o.买入理由 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
                         <td @click="toggleEdit(o, $event)">
                             <input v-if="o._editing" type="text" v-model="o.卖点记录"  placeholder="卖点/卖飞/止损">
-                            <span v-else class="cell-text">{{ o.卖点记录 || '点击编辑' }}</span>
+                            <span v-else class="cell-text"><span v-if="o.卖点记录">{{ o.卖点记录 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
                         <td @click="toggleEdit(o, $event)">
                             <input v-if="o._editing" type="text" v-model="o.结果"  placeholder="待结算/盈利/亏损">
-                            <span v-else class="cell-text">{{ o.结果 || '点击编辑' }}</span>
+                            <span v-else class="cell-text"><span v-if="o.结果">{{ o.结果 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
                         <td><button class="btn-del-row" @click="form.operations.splice(i, 1)">删除</button></td>
                     </tr>

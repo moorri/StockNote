@@ -152,11 +152,38 @@ body {
     color: #333;
     font-size: 13px;
 }
-.cell-text:empty::before {
-    content: '点击编辑';
-    color: #bbb;
+.cell-text .placeholder {
+    color: #ccc;
     font-style: italic;
 }
+.position-value {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+}
+.position-value.danger {
+    color: #e74c3c;
+}
+.position-value.normal {
+    color: #27ae60;
+}
+.position-value.light {
+    color: #95a5a6;
+}
+.market-info-item .value-text {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-block;
+}
+.market-info-item .value-text.red { color: #e74c3c; }
+.market-info-item .value-text.green { color: #27ae60; }
+.market-info-item .value-text.orange { color: #e67e22; }
+.market-info-item .value-text.blue { color: #3498db; }
+.zt-red { color: #e74c3c; }
+.zt-green { color: #27ae60; }
 .btn-add-row {
     margin-top: 10px;
     padding: 6px 12px;
