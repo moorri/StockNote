@@ -63,3 +63,46 @@ window.showToast = function showToast(message, type = 'success') {
         }, 300);
     }, 3000);
 }
+
+// ==================== 金额显示/隐藏公共函数 ====================
+
+// 切换金额显示/隐藏
+function toggleAmountDisplay() {
+    const isHidden = localStorage.getItem(HIDE_AMOUNT_KEY) === 'true';
+    const newState = !isHidden;
+    localStorage.setItem(HIDE_AMOUNT_KEY, newState);
+    updateAmountDisplay();
+}
+
+// 更新金额显示状态
+function updateAmountDisplay() {
+    const isHidden = localStorage.getItem(HIDE_AMOUNT_KEY) === 'true';
+    // 更新所有金额元素
+    document.querySelectorAll('.amount-value').forEach(el => {
+        if (isHidden) {
+            // 跳过 "--" 值，不隐藏也不保存
+            if (el.textContent === '--') {
+                return;
+            }
+            // 只有在 originalText 不存在时才保存，避免多次调用时覆盖
+            if (!el.dataset.originalText) {
+                el.dataset.originalText = el.textContent;
+            }
+            el.textContent = '*****';
+        } else if (el.dataset.originalText) {
+            // 恢复时也要跳过 "--"
+            if (el.dataset.originalText === '--') {
+                el.textContent = '--';
+            } else {
+                el.textContent = el.dataset.originalText;
+            }
+        }
+    });
+    // 更新按钮图标
+    const btn = document.getElementById('hideAmountBtn');
+    if (btn) {
+        const img = btn.querySelector('img');
+        img.src = isHidden ? '../photo/ico/close.png' : '../photo/ico/open.png';
+        img.alt = isHidden ? '显示金额' : '隐藏金额';
+    }
+}

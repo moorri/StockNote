@@ -2,35 +2,6 @@
 
 const { createApp, ref, computed, watch } = Vue;
 
-// 切换金额显示/隐藏
-function toggleAmountDisplay() {
-    const isHidden = localStorage.getItem(HIDE_AMOUNT_KEY) === 'true';
-    const newState = !isHidden;
-    localStorage.setItem(HIDE_AMOUNT_KEY, newState);
-    updateAmountDisplay();
-}
-
-// 更新金额显示状态
-function updateAmountDisplay() {
-    const isHidden = localStorage.getItem(HIDE_AMOUNT_KEY) === 'true';
-    // 更新所有金额元素
-    document.querySelectorAll('.amount-value').forEach(el => {
-        if (isHidden) {
-            el.dataset.originalText = el.textContent;
-            el.textContent = '*****';
-        } else if (el.dataset.originalText) {
-            el.textContent = el.dataset.originalText;
-        }
-    });
-    // 更新按钮图标
-    const btn = document.getElementById('hideAmountBtn');
-    if (btn) {
-        const img = btn.querySelector('img');
-        img.src = isHidden ? '../photo/ico/close.png' : '../photo/ico/open.png';
-        img.alt = isHidden ? '显示金额' : '隐藏金额';
-    }
-}
-
 // 从URL参数获取日期
 function getDateFromUrl() {
     const params = new URLSearchParams(window.location.search);
@@ -215,7 +186,7 @@ createApp({
 
         // 获取涨跌停显示文本（格式：80(红)/5(绿)，即涨停数红色/跌停数绿色）
         const getZtDtDisplay = (val) => {
-            if (!val) return '';
+            if (!val) return '<span class="placeholder">点击编辑</span>';
             const parts = val.split('/');
             if (parts.length >= 2) {
                 const up = parseInt(parts[0]) || 0;

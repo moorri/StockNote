@@ -171,12 +171,20 @@ body {
 .position-value.light {
     color: #95a5a6;
 }
+.position-value .placeholder {
+    color: #ccc;
+    font-style: italic;
+}
 .market-info-item .value-text {
     padding: 4px 8px;
     border-radius: 4px;
     font-weight: 500;
     cursor: pointer;
     display: inline-block;
+}
+.market-info-item .value-text .placeholder {
+    color: #ccc;
+    font-style: italic;
 }
 .market-info-item .value-text.red { color: #e74c3c; }
 .market-info-item .value-text.green { color: #27ae60; }
