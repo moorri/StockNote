@@ -93,7 +93,7 @@
                 <div class="market-info-item">
                     <label>仓位</label>
                     <input v-if="positionEditing" type="text" v-model="form.position" @blur="onPositionBlur" class="position-input" placeholder="如: 80%" style="width: 80px;">
-                    <span v-else class="position-value" :class="getPositionClass(form.position)" @click="togglePositionEdit($event)">{{ form.position || '点击编辑' }}</span>
+                    <span v-else class="position-value" :class="getPositionClass(form.position)" @click="togglePositionEdit($event)"><span v-if="form.position">{{ form.position }}</span><span v-else class="placeholder">点击编辑</span></span>
                 </div>
             </div>
         </div>
@@ -137,27 +137,27 @@
             <div class="market-info" v-else @click="toggleMarketEdit($event)">
                 <div class="market-info-item">
                     <label>上证指数</label>
-                    <span class="value-text" :class="getShIndexClass(form.shIndex)">{{ form.shIndex || '点击编辑' }}</span>
+                    <span class="value-text" :class="getShIndexClass(form.shIndex)"><span v-if="form.shIndex">{{ form.shIndex }}</span><span v-else class="placeholder">点击编辑</span></span>
                 </div>
                 <div class="market-info-item">
                     <label>涨跌停</label>
-                    <span class="value-text" v-html="getZtDtDisplay(form.ztDt) || '点击编辑'"></span>
+                    <span class="value-text" v-html="getZtDtDisplay(form.ztDt)"></span>
                 </div>
                 <div class="market-info-item">
                     <label>最高板</label>
-                    <span class="value-text">{{ form.maxBoard || '点击编辑' }}</span>
+                    <span class="value-text"><span v-if="form.maxBoard">{{ form.maxBoard }}</span><span v-else class="placeholder">点击编辑</span></span>
                 </div>
                 <div class="market-info-item">
                     <label>情绪周期</label>
-                    <span class="value-text" :class="getEmotionClass(form.emotionCycle)">{{ form.emotionCycle || '点击编辑' }}</span>
+                    <span class="value-text" :class="getEmotionClass(form.emotionCycle)"><span v-if="form.emotionCycle">{{ form.emotionCycle }}</span><span v-else class="placeholder">点击编辑</span></span>
                 </div>
                 <div class="market-info-item">
                     <label>成交量</label>
-                    <span class="value-text">{{ form.volume || '点击编辑' }}</span>
+                    <span class="value-text"><span v-if="form.volume">{{ form.volume }}</span><span v-else class="placeholder">点击编辑</span></span>
                 </div>
                 <div class="market-info-item" style="grid-column: span 2;">
                     <label>大节点/关键事件</label>
-                    <span class="value-text">{{ form.keyEvent || '点击编辑' }}</span>
+                    <span class="value-text"><span v-if="form.keyEvent">{{ form.keyEvent }}</span><span v-else class="placeholder">点击编辑</span></span>
                 </div>
             </div>
         </div>
