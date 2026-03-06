@@ -94,6 +94,10 @@ function importThsData() {
                 if (data.data && data.data.length > 0) {
                     fillSelfProfitTableFromThs(data.data);
                     showToast(`成功导入 ${data.data.length} 条数据！`);
+                    // 重新隐藏金额（因为重新填充表格会丢失隐藏状态）
+                    if (typeof updateAmountDisplay === 'function') {
+                        updateAmountDisplay();
+                    }
                 } else {
                     showToast('该月没有平仓记录', 'info');
                 }

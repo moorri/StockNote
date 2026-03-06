@@ -212,6 +212,18 @@ body {
     border-radius: 4px;
     cursor: pointer;
 }
+.btn-copy-row {
+    padding: 4px 8px;
+    border: none;
+    background: #007bff;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 4px;
+}
+.btn-copy-row:hover {
+    background: #0056b3;
+}
 .btn-save-daily {
     position: fixed;
     bottom: 30px;

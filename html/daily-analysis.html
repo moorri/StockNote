@@ -67,7 +67,10 @@
                             <input v-if="w._editing" type="text" v-model="w.备注"  placeholder="备注">
                             <span v-else class="cell-text"><span v-if="w.备注">{{ w.备注 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
-                        <td><button class="btn-del-row" @click="form.watchStocks.splice(i, 1)">删除</button></td>
+                        <td>
+                            <button class="btn-del-row" @click="form.watchStocks.splice(i, 1)">删除</button>
+                            <button class="btn-copy-row" @click="copyToNextDay(w, 'watchStocks')">复制</button>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -269,7 +272,10 @@
                             <input v-if="o._editing" type="text" v-model="o.结果"  placeholder="待结算/盈利/亏损">
                             <span v-else class="cell-text"><span v-if="o.结果">{{ o.结果 }}</span><span v-else class="placeholder">点击编辑</span></span>
                         </td>
-                        <td><button class="btn-del-row" @click="form.operations.splice(i, 1)">删除</button></td>
+                        <td>
+                            <button class="btn-del-row" @click="form.operations.splice(i, 1)">删除</button>
+                            <button class="btn-copy-row" @click="copyToNextDay(o, 'operations')">复制</button>
+                        </td>
                     </tr>
                 </tbody>
             </table>

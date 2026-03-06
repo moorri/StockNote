@@ -333,6 +333,39 @@ createApp({
             shutdownServer();
         };
 
+        // 复制到下一个开盘日
+        const copyToNextDay = async (item, arrayName) => {
+            // 1. 获取下一个开盘日
+            const nextDate = await getNextTradingDay(currentDate.value, 1);
+            const year = nextDate.getFullYear();
+            const month = nextDate.getMonth() + 1;
+            const nextDateKey = `${year}-${String(month).padStart(2, '0')}-${String(nextDate.getDate()).padStart(2, '0')}`;
+
+            // 2. 读取下一日数据
+            const all = await getDailyData(year, month);
+            if (!all[nextDateKey]) {
+                // 如果下一天没有数据，初始化空结构
+                all[nextDateKey] = {
+                    date: nextDateKey,
+                    watchStocks: [],
+                    highBoards: [],
+                    operations: [],
+                    sectors: []
+                };
+            }
+
+            // 3. 复制数据（去除 _editing 属性）
+            const newItem = { ...item };
+            delete newItem._editing;
+            all[nextDateKey][arrayName].push(newItem);
+
+            // 4. 保存数据
+            await saveDailyData(year, month, all);
+
+            // 5. 提示用户
+            showToast(`已复制到 ${nextDate.getMonth()+1}月${nextDate.getDate()}日`);
+        };
+
         return {
             currentDate,
             dateKey,
@@ -355,7 +388,8 @@ createApp({
             getShIndexClass,
             getZtDtClass,
             getZtDtDisplay,
-            getEmotionClass
+            getEmotionClass,
+            copyToNextDay
         };
     }
 }).mount('#app');
